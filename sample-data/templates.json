@@ -1,0 +1,477 @@
+[
+  {
+    "id": "invite_coach",
+    "name": "Coach invitation",
+    "channel": "email",
+    "category": "coach",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Mai Nguyen",
+    "createdAt": "2026-02-11T03:20:00.000Z",
+    "source": {
+      "subject": "You are invited to coach at {schoolName}",
+      "preheader": "Your invitation code is {code} and expires in {days} days.",
+      "heading": "Welcome, {firstName}",
+      "body": "<p>{senderName} has invited you to join <strong>{schoolName}</strong> as a coach.</p><p>Coaches review unit plans, schedule visitations and leave feedback for teachers. Accept the invitation below to set your password and see your campuses.</p><p>Your invitation code is <strong>{code}</strong>. It expires in {days} days.</p>",
+      "cta": "Accept invitation",
+      "footer": "You received this because {senderName} added {email} to {schoolName}. If this was not meant for you, ignore this mail and nothing will happen."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Bạn được mời làm coach tại {schoolName}",
+        "preheader": "Mã lời mời của bạn là {code}, hết hạn sau {days} ngày.",
+        "heading": "Xin chào {firstName}",
+        "body": "<p>{senderName} đã mời bạn tham gia <strong>{schoolName}</strong> với vai trò coach.</p><p>Coach xem xét kế hoạch bài học, xếp lịch dự giờ và gửi nhận xét cho giáo viên. Hãy nhận lời mời bên dưới để đặt mật khẩu và xem các cơ sở của bạn.</p><p>Mã lời mời của bạn là <strong>{code}</strong>, hết hạn sau {days} ngày.</p>",
+        "cta": "Nhận lời mời",
+        "footer": "Bạn nhận được thư này vì {senderName} đã thêm {email} vào {schoolName}. Nếu đây không phải thư dành cho bạn, hãy bỏ qua."
+      },
+      "ja": {
+        "subject": "{schoolName} のコーチとして招待されました",
+        "heading": "{firstName} さん、ようこそ",
+        "cta": "招待を受ける"
+      }
+    }
+  },
+  {
+    "id": "invite_teacher",
+    "name": "Teacher invitation",
+    "channel": "email",
+    "category": "teacher",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Mai Nguyen",
+    "createdAt": "2026-02-11T03:26:00.000Z",
+    "source": {
+      "subject": "Join {className} on {appName}",
+      "preheader": "Set your password and open your first unit plan.",
+      "heading": "Hello {firstName}",
+      "body": "<p>{coachName} has invited you to teach <strong>{className}</strong> at {campusName}.</p><p>Once you accept, you can open your unit plans, upload lesson evidence and message your coach. Your invitation code is <strong>{code}</strong>.</p>",
+      "cta": "Set up my account",
+      "footer": "This invitation was sent to {email} and expires in {days} days."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Tham gia {className} trên {appName}",
+        "preheader": "Đặt mật khẩu và mở kế hoạch bài học đầu tiên của bạn.",
+        "heading": "Xin chào {firstName}",
+        "body": "<p>{coachName} đã mời bạn dạy <strong>{className}</strong> tại {campusName}.</p><p>Sau khi nhận lời mời, bạn có thể mở kế hoạch bài học, tải lên minh chứng tiết dạy và nhắn tin cho coach. Mã lời mời của bạn là <strong>{code}</strong>.</p>",
+        "cta": "Thiết lập tài khoản",
+        "footer": "Lời mời này được gửi tới {email} và hết hạn sau {days} ngày."
+      }
+    }
+  },
+  {
+    "id": "invite_parent",
+    "name": "Parent invitation",
+    "channel": "email",
+    "category": "parent",
+    "target": "others/email",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-03-02T07:05:00.000Z",
+    "source": {
+      "subject": "Follow {studentName}'s progress on {appName}",
+      "preheader": "One code connects you to your child's class.",
+      "heading": "Hello {parentName}",
+      "body": "<p>{teacherName} has invited you to follow <strong>{studentName}</strong> in {className}.</p><p>In the app you can see the unit your child is on, listen to the songs and stories from class, and read the notes their teacher leaves after each lesson.</p><p>Enter the code <strong>{code}</strong> when the app asks for it.</p>",
+      "cta": "Open the app",
+      "footer": "Sent to {email} by {schoolName}. You can turn these mails off in the app under Settings."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Theo dõi tiến độ của {studentName} trên {appName}",
+        "preheader": "Một mã duy nhất kết nối bạn với lớp của con.",
+        "heading": "Xin chào {parentName}",
+        "body": "<p>{teacherName} đã mời bạn theo dõi <strong>{studentName}</strong> trong lớp {className}.</p><p>Trong ứng dụng, bạn có thể xem con đang học bài nào, nghe lại các bài hát và câu chuyện trên lớp, và đọc nhận xét của giáo viên sau mỗi tiết học.</p><p>Hãy nhập mã <strong>{code}</strong> khi ứng dụng yêu cầu.</p>",
+        "cta": "Mở ứng dụng"
+      }
+    }
+  },
+  {
+    "id": "invite_student",
+    "name": "Student invitation",
+    "channel": "email",
+    "category": "student",
+    "target": "others/email",
+    "owner": { "kind": "app", "app": "student" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-03-02T07:11:00.000Z",
+    "source": {
+      "subject": "Your {appName} account is ready",
+      "heading": "Hi {firstName}",
+      "body": "<p>Your class {className} is waiting for you. Sign in with the code <strong>{code}</strong> to start {unitName}.</p>",
+      "cta": "Start learning",
+      "footer": "If you need help, ask your teacher {teacherName}."
+    },
+    "translations": {}
+  },
+  {
+    "id": "reset_password",
+    "name": "Password reset",
+    "channel": "email",
+    "category": "admin",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Sarah Klein",
+    "createdAt": "2026-01-19T10:42:00.000Z",
+    "source": {
+      "subject": "Reset your {appName} password",
+      "preheader": "The link below works once, for {days} hours.",
+      "heading": "Password reset requested",
+      "body": "<p>Somebody asked to reset the password for <strong>{email}</strong>. If it was you, use the button below.</p><p>The link works once and expires in {days} hours. If it was not you, no action is needed — the password has not changed.</p>",
+      "cta": "Choose a new password",
+      "footer": "For help, reply to this mail or contact {senderName}."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Đặt lại mật khẩu {appName} của bạn",
+        "preheader": "Liên kết bên dưới chỉ dùng được một lần, trong {days} giờ.",
+        "heading": "Yêu cầu đặt lại mật khẩu",
+        "body": "<p>Có người yêu cầu đặt lại mật khẩu cho <strong>{email}</strong>. Nếu đó là bạn, hãy dùng nút bên dưới.</p><p>Liên kết chỉ dùng được một lần và hết hạn sau {days} giờ. Nếu không phải bạn, bạn không cần làm gì — mật khẩu vẫn chưa thay đổi.</p>",
+        "cta": "Chọn mật khẩu mới",
+        "footer": "Cần hỗ trợ, hãy trả lời thư này hoặc liên hệ {senderName}."
+      },
+      "ko": {
+        "subject": "{appName} 비밀번호 재설정",
+        "heading": "비밀번호 재설정 요청",
+        "cta": "새 비밀번호 설정"
+      }
+    }
+  },
+  {
+    "id": "unit_plan_due",
+    "name": "Unit plan reminder",
+    "channel": "email",
+    "category": "teacher",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "curriculum" },
+    "createdBy": "Ngoc Tran",
+    "createdAt": "2026-04-07T02:15:00.000Z",
+    "source": {
+      "subject": "{unitName} plan is due {dueDate}",
+      "preheader": "{count} lessons still have no plan attached.",
+      "heading": "{count} lessons need a plan",
+      "body": "<p>Your plan for <strong>{unitName}</strong> in {className} is due on {dueDate}.</p><p>{count} lessons have nothing attached yet. {coachName} reviews the plan after you submit it.</p>",
+      "cta": "Open the unit plan",
+      "footer": "You get this reminder {days} days before a plan is due. Change that under Settings."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Kế hoạch {unitName} đến hạn ngày {dueDate}",
+        "heading": "{count} tiết học cần kế hoạch",
+        "body": "<p>Kế hoạch cho <strong>{unitName}</strong> ở lớp {className} đến hạn vào ngày {dueDate}.</p><p>Vẫn còn {count} tiết chưa có tài liệu nào. {coachName} sẽ xem xét kế hoạch sau khi bạn gửi.</p>",
+        "cta": "Mở kế hoạch bài học"
+      }
+    }
+  },
+  {
+    "id": "visitation_scheduled",
+    "name": "Visitation scheduled",
+    "channel": "email",
+    "category": "coach",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Hung Dang",
+    "createdAt": "2026-04-22T06:48:00.000Z",
+    "source": {
+      "subject": "Visitation at {campusName} on {date}",
+      "preheader": "{className} at {time}, with {teacherName}.",
+      "heading": "Visitation confirmed",
+      "body": "<p>Your visitation of <strong>{className}</strong> is confirmed for {date} at {time}, at {campusName}.</p><p>{teacherName} has been notified. The unit plan and the last two feedback notes are attached to the visit in the app.</p>",
+      "cta": "See the visit",
+      "footer": "To move or cancel this visit, open it in {appName}."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Dự giờ tại {campusName} ngày {date}",
+        "preheader": "Lớp {className} lúc {time}, cùng {teacherName}.",
+        "heading": "Đã xác nhận lịch dự giờ",
+        "body": "<p>Buổi dự giờ lớp <strong>{className}</strong> đã được xác nhận vào {date} lúc {time}, tại {campusName}.</p><p>{teacherName} đã được thông báo. Kế hoạch bài học và hai nhận xét gần nhất được đính kèm trong ứng dụng.",
+        "cta": "Xem buổi dự giờ",
+        "footer": "Để đổi hoặc hủy buổi dự giờ, hãy mở buổi đó trong {appName}."
+      }
+    }
+  },
+  {
+    "id": "training_enrolled",
+    "name": "Training enrolment confirmed",
+    "channel": "email",
+    "category": "teacher",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "training" },
+    "createdBy": "Sarah Klein",
+    "createdAt": "2026-05-04T09:30:00.000Z",
+    "source": {
+      "subject": "You are enrolled: {unitName} training",
+      "preheader": "Starts {date} at {time}. Bring the pre-work.",
+      "heading": "See you on {date}",
+      "body": "<p>You are enrolled in <strong>{unitName}</strong> training, starting {date} at {time}.</p><p>The pre-work takes about 40 minutes and has to be finished before the first session. Everything you need is in the course page.</p>",
+      "cta": "Open the course",
+      "footer": "Cannot make it? Withdraw from the course page at least {days} days before it starts."
+    },
+    "translations": {}
+  },
+  {
+    "id": "progress_report",
+    "name": "Monthly progress report",
+    "channel": "email",
+    "category": "parent",
+    "target": "others/email",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-05-18T04:02:00.000Z",
+    "source": {
+      "subject": "{studentName}'s month in {className}",
+      "preheader": "{count} lessons, {unitName} finished.",
+      "heading": "A good month, {parentName}",
+      "body": "<p>{studentName} attended {count} lessons this month and finished <strong>{unitName}</strong>.</p><p>{teacherName} wrote: the new vocabulary is coming through in conversation, and reading aloud is getting steadier week by week.</p><p>The full report, with the songs and stories from this unit, is in the app.</p>",
+      "cta": "Read the report",
+      "footer": "Sent monthly by {schoolName}. Turn it off in the app under Settings."
+    },
+    "translations": {
+      "vi": {
+        "subject": "Một tháng của {studentName} ở lớp {className}",
+        "preheader": "{count} tiết học, đã hoàn thành {unitName}.",
+        "heading": "Một tháng tốt, {parentName}",
+        "body": "<p>{studentName} đã tham gia {count} tiết học trong tháng này và hoàn thành <strong>{unitName}</strong>.</p><p>{teacherName} nhận xét: từ vựng mới đã xuất hiện trong giao tiếp, và việc đọc to ngày càng vững hơn từng tuần.</p><p>Báo cáo đầy đủ, kèm các bài hát và câu chuyện của bài học này, có trong ứng dụng.</p>",
+        "cta": "Đọc báo cáo",
+        "footer": "Được gửi hằng tháng bởi {schoolName}. Bạn có thể tắt trong phần Cài đặt của ứng dụng."
+      },
+      "th": {
+        "subject": "หนึ่งเดือนของ {studentName} ในชั้น {className}",
+        "heading": "เป็นเดือนที่ดี {parentName}",
+        "cta": "อ่านรายงาน"
+      }
+    }
+  },
+  {
+    "id": "license_expiring",
+    "name": "License expiring",
+    "channel": "email",
+    "category": "admin",
+    "target": "others/email",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Hung Dang",
+    "createdAt": "2026-06-09T08:14:00.000Z",
+    "source": {
+      "subject": "{schoolName} licenses expire in {days} days",
+      "preheader": "{count} teachers lose access on {dueDate}.",
+      "heading": "Renew before {dueDate}",
+      "body": "<p>{count} of the licenses at <strong>{schoolName}</strong> expire on {dueDate}.</p><p>After that date those teachers keep their accounts but cannot open unit plans or lesson media. Renewing takes a minute and nothing is lost in between.</p>",
+      "cta": "Review licenses",
+      "footer": "This notice goes to every administrator at {schoolName}."
+    },
+    "translations": {}
+  },
+  {
+    "id": "sms_invite_parent",
+    "name": "Parent invite code",
+    "channel": "sms",
+    "category": "parent",
+    "target": "others/sms",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-03-02T07:20:00.000Z",
+    "source": {
+      "message": "{schoolName}: use code {code} in the {appName} app to follow {studentName}. {link}"
+    },
+    "translations": {
+      "vi": {
+        "message": "{schoolName}: dùng mã {code} trong ứng dụng {appName} để theo dõi {studentName}. {link}"
+      },
+      "ja": {
+        "message": "{schoolName}：{appName} アプリでコード {code} を入力して {studentName} を確認してください。{link}"
+      }
+    }
+  },
+  {
+    "id": "sms_invite_teacher",
+    "name": "Teacher invite code",
+    "channel": "sms",
+    "category": "teacher",
+    "target": "others/sms",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Mai Nguyen",
+    "createdAt": "2026-02-11T03:31:00.000Z",
+    "source": {
+      "message": "{coachName} invited you to teach {className}. Set up your account: {link} Code: {code}"
+    },
+    "translations": {
+      "vi": {
+        "message": "{coachName} đã mời bạn dạy lớp {className}. Thiết lập tài khoản: {link} Mã: {code}"
+      }
+    }
+  },
+  {
+    "id": "sms_class_reminder",
+    "name": "Class reminder",
+    "channel": "sms",
+    "category": "parent",
+    "target": "others/sms",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Ngoc Tran",
+    "createdAt": "2026-04-15T01:55:00.000Z",
+    "source": {
+      "message": "Reminder: {className} starts {time} tomorrow at {campusName}."
+    },
+    "translations": {
+      "vi": {
+        "message": "Nhắc bạn: lớp {className} bắt đầu lúc {time} ngày mai tại {campusName}."
+      },
+      "zh-Hans": {
+        "message": "提醒：{className} 明天 {time} 在 {campusName} 开始。"
+      }
+    }
+  },
+  {
+    "id": "sms_absence_alert",
+    "name": "Absence alert",
+    "channel": "sms",
+    "category": "parent",
+    "target": "others/sms",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Ngoc Tran",
+    "createdAt": "2026-04-15T02:03:00.000Z",
+    "source": {
+      "message": "{studentName} was marked absent from {className} today. Reply or open {appName} to tell {teacherName} why."
+    },
+    "translations": {}
+  },
+  {
+    "id": "sms_otp",
+    "name": "Login verification code",
+    "channel": "sms",
+    "category": "staff",
+    "target": "others/sms",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Sarah Klein",
+    "createdAt": "2026-01-19T10:50:00.000Z",
+    "source": {
+      "message": "{code} is your {appName} verification code. It expires in 10 minutes. Do not share it."
+    },
+    "translations": {
+      "vi": {
+        "message": "{code} là mã xác minh {appName} của bạn. Mã hết hạn sau 10 phút. Không chia sẻ mã này với bất kỳ ai, kể cả nhân viên hỗ trợ."
+      }
+    }
+  },
+  {
+    "id": "push_new_unit",
+    "name": "New unit available",
+    "channel": "notification",
+    "category": "student",
+    "target": "others/notification",
+    "owner": { "kind": "app", "app": "student" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-03-11T05:40:00.000Z",
+    "source": {
+      "title": "{unitName} is open",
+      "body": "Your class has moved on. Tap to see the new songs and stories."
+    },
+    "translations": {
+      "vi": {
+        "title": "{unitName} đã mở",
+        "body": "Lớp của bạn đã sang bài mới. Nhấn để xem các bài hát và câu chuyện mới."
+      }
+    }
+  },
+  {
+    "id": "push_homework_due",
+    "name": "Homework due today",
+    "channel": "notification",
+    "category": "student",
+    "target": "others/notification",
+    "owner": { "kind": "app", "app": "student" },
+    "createdBy": "Irene Do",
+    "createdAt": "2026-03-11T05:44:00.000Z",
+    "source": {
+      "title": "Homework due today",
+      "body": "{count} activities from {unitName} are still waiting. It takes about ten minutes."
+    },
+    "translations": {
+      "vi": {
+        "title": "Bài tập đến hạn hôm nay",
+        "body": "Còn {count} hoạt động của {unitName} chưa làm. Chỉ mất khoảng mười phút."
+      },
+      "ko": {
+        "title": "오늘 마감인 과제",
+        "body": "{unitName}의 활동 {count}개가 남아 있습니다. 10분 정도 걸립니다."
+      }
+    }
+  },
+  {
+    "id": "push_child_progress",
+    "name": "Child progress updated",
+    "channel": "notification",
+    "category": "parent",
+    "target": "others/notification",
+    "owner": { "kind": "app", "app": "parent" },
+    "createdBy": "Ngoc Tran",
+    "createdAt": "2026-05-18T04:10:00.000Z",
+    "source": {
+      "title": "{teacherName} left a note",
+      "body": "{studentName} finished {unitName}. Tap to read what the teacher wrote."
+    },
+    "translations": {
+      "vi": {
+        "title": "{teacherName} đã gửi nhận xét",
+        "body": "{studentName} đã hoàn thành {unitName}. Nhấn để đọc nhận xét của giáo viên."
+      }
+    }
+  },
+  {
+    "id": "push_visit_reminder",
+    "name": "Visitation tomorrow",
+    "channel": "notification",
+    "category": "coach",
+    "target": "others/notification",
+    "owner": { "kind": "web", "app": "school" },
+    "createdBy": "Hung Dang",
+    "createdAt": "2026-04-22T06:55:00.000Z",
+    "source": {
+      "title": "Visitation tomorrow at {time}",
+      "body": "{className} at {campusName}, with {teacherName}."
+    },
+    "translations": {
+      "vi": {
+        "title": "Dự giờ vào {time} ngày mai",
+        "body": "Lớp {className} tại {campusName}, cùng {teacherName}."
+      }
+    }
+  },
+  {
+    "id": "push_story_ready",
+    "name": "New story ready",
+    "channel": "notification",
+    "category": "parent",
+    "target": "others/notification",
+    "owner": { "kind": "app", "app": "baby" },
+    "createdBy": "Mai Nguyen",
+    "createdAt": "2026-06-01T03:25:00.000Z",
+    "source": {
+      "title": "A new story for {firstName}",
+      "body": "{unitName} is ready to read together. Five minutes before bed is plenty."
+    },
+    "translations": {
+      "vi": {
+        "title": "Có truyện mới cho {studentName}",
+        "body": "{unitName} đã sẵn sàng để đọc cùng nhau. Năm phút trước khi đi ngủ là đủ."
+      }
+    }
+  },
+  {
+    "id": "push_survey",
+    "name": "Survey request",
+    "channel": "notification",
+    "category": "teacher",
+    "target": "others/notification",
+    "owner": { "kind": "web", "app": "training" },
+    "createdBy": "Sarah Klein",
+    "createdAt": "2026-05-04T09:38:00.000Z",
+    "source": {
+      "title": "How was {unitName} training?",
+      "body": "Six questions, about two minutes. Your answers go to the trainer, not your school."
+    },
+    "translations": {}
+  }
+]

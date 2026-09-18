@@ -12,6 +12,7 @@ import type {
   LanguageCode,
   TranslationRow,
 } from "./locale_data.ts"
+import type { TemplateEntry } from "./template_data.ts"
 
 /** A key in the registry — `server-data/keys.json`, one row of it. */
 export type KeyRecord = {
@@ -30,6 +31,21 @@ export type EntriesResponse = {
   language: LanguageCode
   sourceLanguage: LanguageCode
   entries: TranslationRow[]
+}
+
+/**
+ * `GET /api/templates?target=&lang=` — one channel's templates, text included.
+ *
+ * The Others targets hold message templates rather than loose keys, so this is
+ * the list screen's request. There is no per-template GET and no per-template
+ * PUT: the text is ordinary keys under `<template>.<field>`, so the translate
+ * dialog saves through `PUT /api/translations/:lang` like everything else.
+ */
+export type TemplatesResponse = {
+  target: string
+  language: LanguageCode
+  sourceLanguage: LanguageCode
+  templates: TemplateEntry[]
 }
 
 /** `POST /api/keys` */
@@ -89,6 +105,29 @@ export type CoverageResponse = {
   groupCount: number
   /** Least complete first, then most flagged. */
   languages: LanguageCoverage[]
+}
+
+/** One file in an export: a language, and what to call its file. */
+export type ExportFile = {
+  language: LanguageCode
+  /** File name inside the archive, extension included — `vi.json`. */
+  name: string
+}
+
+/**
+ * `POST /api/export` — answers with a .zip holding one file per language.
+ *
+ * A POST rather than a GET because the caller names every file in the
+ * archive, and a dozen arbitrary names belong in a body rather than a query
+ * string.
+ */
+export type ExportRequest = {
+  target: string
+  files: ExportFile[]
+  /** Archive name without the extension; the server sanitises it. */
+  name: string
+  /** Keep the keys `statusOf` calls missing — empty, or still English. */
+  includeUntranslated: boolean
 }
 
 export type ApiErrorBody = {

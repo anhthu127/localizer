@@ -53,19 +53,24 @@ export const navSections: NavSection[] = [
       { id: "student", title: "Student", icon: Backpack, count: 3 },
     ],
   },
+  /**
+   * Messages, not screens — and one leaf per *channel*, not per message.
+   *
+   * These used to be three leaves named after single mails ("Mail invite
+   * user", "SMS invite user", "Mail notification"). Each of those is one
+   * template among many: the same product sends an invite to a coach, a
+   * teacher, a parent and a student, and they are different copy. So the leaf
+   * is the format — email, SMS, notification — and the templates inside it are
+   * a table. See `src/lib/template_data.ts`.
+   */
   {
     id: "others",
-    title: "Others",
+    title: "Messages",
     icon: SquareStack,
     items: [
-      { id: "mail-invite-user", title: "Mail invite user", icon: MailPlus },
-      {
-        id: "sms-invite-user",
-        title: "SMS invite user",
-        icon: MessageSquarePlus,
-        count: 2,
-      },
-      { id: "mail-notification", title: "Mail notification", icon: BellRing },
+      { id: "email", title: "Email", icon: MailPlus },
+      { id: "sms", title: "SMS", icon: MessageSquarePlus },
+      { id: "notification", title: "Notification", icon: BellRing },
     ],
   },
 ]

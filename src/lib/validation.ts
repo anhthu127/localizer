@@ -13,11 +13,21 @@
  */
 
 import type { LanguageCode } from "@/lib/locale_data"
+// Relative and extension-ful, like `api_types.ts`: the mock server imports this
+// module directly, and only the type-only import above can use the `@` alias.
+import { VOID_TAGS } from "./template_preview.ts"
 
 export type IssueLevel = "error" | "warning"
 
 export type RowIssue = {
-  id: "placeholder" | "whitespace" | "script" | "length" | "max-length"
+  id:
+    | "placeholder"
+    | "whitespace"
+    | "script"
+    | "length"
+    | "max-length"
+    | "html"
+    | "link"
   level: IssueLevel
   message: string
 }
@@ -117,19 +127,109 @@ function scriptIssue(value: string, language: LanguageCode): RowIssue | null {
   return null
 }
 
+/* --------------------------------------------------------------------------
+ * HTML — email bodies only
+ * ------------------------------------------------------------------------ */
+
+const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
+
+/**
+ * Tag balance, as a stack.
+ *
+ * An email body is the one field where a translation can be grammatically
+ * perfect and still ship broken: a dropped `</p>` collapses the rest of the
+ * mail into one paragraph, and a stray `</div>` closes the template's own
+ * wrapper. Void tags are skipped because `<br>` never closes.
+ */
+function tagIssue(value: string): RowIssue | null {
+  const open: string[] = []
+
+  for (const match of value.matchAll(TAG)) {
+    const tag = match[2].toLowerCase()
+    if (VOID_TAGS.has(tag)) {
+      continue
+    }
+
+    if (match[1]) {
+      const last = open.pop()
+      if (last !== tag) {
+        return {
+          id: "html",
+          level: "error",
+          message: last
+            ? `</${tag}> closes <${last}> — tags are crossed`
+            : `</${tag}> has no opening tag`,
+        }
+      }
+    } else {
+      open.push(tag)
+    }
+  }
+
+  if (open.length > 0) {
+    return {
+      id: "html",
+      level: "error",
+      message: `<${open[open.length - 1]}> is never closed`,
+    }
+  }
+
+  return null
+}
+
+const hrefsOf = (value: string) =>
+  [...value.matchAll(/href\s*=\s*["']?([^"'\s>]+)/gi)]
+    .map((match) => match[1])
+    .sort()
+
+/**
+ * A link a translator retyped, dropped or localised by hand is a dead link in
+ * a mail that has already been sent. The English URLs are the ones that work,
+ * so the target's set has to match them exactly — placeholders included, since
+ * most of them are `{link}`.
+ */
+function linkIssue(source: string, target: string): RowIssue | null {
+  const wanted = hrefsOf(source)
+  const found = hrefsOf(target)
+
+  if (sameMembers(wanted, found)) {
+    return null
+  }
+
+  if (found.length < wanted.length) {
+    return {
+      id: "link",
+      level: "error",
+      message: `${wanted.length} link${wanted.length === 1 ? "" : "s"} in the English, ${found.length} here`,
+    }
+  }
+
+  return {
+    id: "link",
+    level: "error",
+    message: "A link address differs from the English one",
+  }
+}
+
 type CheckOptions = {
   language: LanguageCode
   /** Ratio over the source length past which the row warns. */
   lengthBudget: number
   /** Hard ceiling the backend enforces, where one is known. */
   maxLength?: number
+  /**
+   * `html` adds the tag-balance and link checks — an email body is markup, and
+   * a lost `</p>` or a rewritten `href` breaks the mail rather than the
+   * sentence. Everything else is `text`, the default.
+   */
+  format?: "text" | "html"
 }
 
 /** Ordered most severe first, so a row can show the worst one inline. */
 export function checkTranslation(
   source: string,
   target: string,
-  { language, lengthBudget, maxLength }: CheckOptions
+  { language, lengthBudget, maxLength, format = "text" }: CheckOptions
 ): RowIssue[] {
   if (!target) {
     return []
@@ -160,6 +260,17 @@ export function checkTranslation(
       level: "error",
       message: `${target.length.toLocaleString()} characters, over the ${maxLength.toLocaleString()} limit`,
     })
+  }
+
+  if (format === "html") {
+    const tag = tagIssue(target)
+    if (tag) {
+      issues.push(tag)
+    }
+    const link = linkIssue(source, target)
+    if (link) {
+      issues.push(link)
+    }
   }
 
   const script = scriptIssue(target, language)

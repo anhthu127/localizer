@@ -9,6 +9,7 @@ import {
   ALL_GROUPS,
   GroupFilter,
 } from "@/components/translations/group_filter"
+import { ExportDialog } from "@/components/translations/export_dialog"
 import { TargetProfileCard } from "@/components/translations/target_profile_card"
 import { TranslationRow } from "@/components/translations/translation_row"
 import { Badge } from "@/components/ui/badge"
@@ -308,6 +309,13 @@ export function TranslationsPage() {
                 {percent}% · {translatedCount}/{rows.length}
               </span>
             </>
+          )}
+          {hasKeys && (
+            <ExportDialog
+              target={profile.path}
+              targetTitle={match.leaf.title}
+              language={language}
+            />
           )}
           {addKeyDialog}
         </div>

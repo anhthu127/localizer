@@ -12,15 +12,26 @@
  * brief; the doc lists the question that settles each one.
  */
 
+import type { TemplateChannel } from "@/lib/template_data"
+
 /**
- * The axis that actually drives layout — more than Web / App / Others does.
+ * The axis that actually drives layout — more than Web / App / Messages does.
  *
- * `ui`    thousands of short labels; dense virtualized grid.
- * `email` tens of long HTML bodies; editor beside a rendered preview.
- * `sms`   tens of tiny strings under a hard segment budget; single-line input
- *         with an encoding meter.
+ * `ui`           thousands of short labels; dense virtualized grid.
+ * `email`        multi-field HTML messages; a table of templates, and an
+ *                editor beside a rendered preview.
+ * `sms`          one tiny field under a hard segment budget, per template.
+ * `notification` a title and a body, both truncated by the OS.
+ *
+ * The last three are channels of the same thing — see `lib/template_data.ts` —
+ * so they share a screen: a template table, and a two-panel translate dialog.
  */
-export type ContentKind = "ui" | "email" | "sms"
+export type ContentKind = "ui" | TemplateChannel
+
+/** Targets whose content is message templates rather than loose keys. */
+export function isTemplateKind(kind: ContentKind): kind is TemplateChannel {
+  return kind !== "ui"
+}
 
 export type TargetProfile = {
   /** `${sectionId}/${leafId}`, the same shape as the route. */
@@ -31,12 +42,12 @@ export type TargetProfile = {
   /** Register the copy has to keep; shown in the workspace header. */
   tone: string
   /**
-   * The sample bundle this target owns. Only School has one — `sample-data`
-   * is a single application's export, not ten. Targets without a bundle show
-   * their profile and an explicit "not imported" state rather than borrowing
-   * School's keys.
+   * The sample data this target owns: `school` is the one real application
+   * export in `sample-data/locale`, `templates` is the message seed in
+   * `sample-data/templates.json`. Targets without either show their profile
+   * and an explicit "not imported" state rather than borrowing School's keys.
    */
-  bundle?: "school"
+  bundle?: "school" | "templates"
   /**
    * Ratio over the source length past which a translation is flagged as at
    * risk of breaking the layout. Mobile targets sit tighter than web ones
@@ -117,32 +128,36 @@ const profiles: TargetProfile[] = [
     note: "No source bundle imported. Phone-width labels — keep translations close to the source length.",
   },
   {
-    path: "others/mail-invite-user",
+    path: "others/email",
     kind: "email",
-    audience: "Invited users, before they have an account",
-    tone: "Welcoming and instructional. The reader has never seen the product.",
-    lengthBudget: 2,
-    measured: false,
-    note: "No source bundle imported. Subject, body and CTA — keep {link} and {code} intact.",
-  },
-  {
-    path: "others/sms-invite-user",
-    kind: "sms",
-    audience: "Invited users, on a phone",
-    tone: "Terse. Every character costs — say it in one segment if you can.",
-    lengthBudget: 1.1,
-    measured: false,
-    note: "No source bundle imported. Non-Latin scripts drop the segment to 70 characters.",
-  },
-  {
-    path: "others/mail-notification",
-    kind: "email",
-    audience: "Existing users receiving a system notification",
-    tone: "Factual and short. The reader is scanning, not reading.",
+    audience:
+      "Coaches, teachers, parents, students and administrators — one template per audience",
+    tone: "Set by the template's category. An invite to a coach and an invite to a parent are different copy.",
+    bundle: "templates",
     lengthBudget: 2,
     maxLength: 4000,
     measured: false,
-    note: "No source bundle imported. The backend caps a notification body at 4,000 characters.",
+    note: "Ten templates, six fields each. Keep every tag, every link and every {placeholder} the English has.",
+  },
+  {
+    path: "others/sms",
+    kind: "sms",
+    audience: "The same people, on a phone",
+    tone: "Terse. Every character costs — say it in one segment if you can.",
+    bundle: "templates",
+    lengthBudget: 1.1,
+    measured: false,
+    note: "Five templates of one field. Nine of the twelve languages bill at 70 characters, not 160.",
+  },
+  {
+    path: "others/notification",
+    kind: "notification",
+    audience: "Existing users, on a lock screen",
+    tone: "Factual and short. The reader is scanning, not reading.",
+    bundle: "templates",
+    lengthBudget: 1.4,
+    measured: false,
+    note: "Six templates of a title and a body. The OS truncates the title around 65 characters.",
   },
 ]
 
@@ -173,13 +188,14 @@ export function profileOf(sectionId?: string, leafId?: string): TargetProfile {
 
 export const targetCount = profiles.length
 
-/** Targets with an export in `sample-data` — School, and nothing else yet. */
+/** Targets with data in `sample-data` — School and the three message channels. */
 export const targetsWithBundle = profiles.filter(
   (profile) => profile.bundle
 ).length
 
 export const kindLabel: Record<ContentKind, string> = {
   ui: "UI strings",
-  email: "Email template",
-  sms: "SMS template",
+  email: "Email templates",
+  sms: "SMS templates",
+  notification: "Notification templates",
 }

@@ -1,4 +1,4 @@
-import { KeyRound, Mail, MessageSquare, Type } from "lucide-react"
+import { BellRing, KeyRound, Mail, MessageSquare, Type } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -18,6 +18,7 @@ const kindIcon: Record<ContentKind, typeof Type> = {
   ui: Type,
   email: Mail,
   sms: MessageSquare,
+  notification: BellRing,
 }
 
 /**

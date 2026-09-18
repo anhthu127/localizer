@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router"
 import { AppLayout } from "@/components/layout/app_layout"
 import { Toaster } from "@/components/ui/sonner"
 import { DashboardPage } from "@/pages/dashboard_page"
-import { TranslationsPage } from "@/pages/translations_page"
+import { TargetPage } from "@/pages/target_page"
 
 function App() {
   return (
@@ -13,11 +13,9 @@ function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
-            {/* `/web/school`, `/app/parent`, … — one route per nav leaf. */}
-            <Route
-              path=":sectionId/:leafId"
-              element={<TranslationsPage />}
-            />
+            {/* `/web/school`, `/others/email`, … — one route per nav leaf.
+                `TargetPage` picks the screen from the target's content kind. */}
+            <Route path=":sectionId/:leafId" element={<TargetPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -320,3 +320,46 @@ A `server-data/` left over from the flat layout is detected and re-seeded automa
 - `npm run build` (tsc + vite) — passes. `npm run lint` — 0 errors, 7 warnings, all pre-existing.
 - Exercised against a running dev server: created `home.greeting.title` in `app/parent` (13 files written under `translations/app/parent/`, absent from School's 3,339), created the *same* key in `app/student` (201, its own files), rejected it as a duplicate within `app/parent` (409), saved a Vietnamese value into `app/parent/vi.json` only, rejected a save with no target (400), deleted from `app/parent` and confirmed `app/student` kept its copy, got a 404 deleting it from the wrong app, and reset back to 3,339 imported keys in 14 files.
 - **Not verified:** still not clicked through in a browser.
+
+---
+
+## 11. Export
+
+Date: 2026-09-18.
+
+A consumer app can now be exported as a zip of locale files, named by whoever exports it.
+
+### The shape of it
+
+`src/components/translations/export_dialog.tsx`, opened from the workspace toolbar beside **Add key**:
+
+- a **File names** pattern, `{lang}.json` by default, where `{lang}` is the language code;
+- a checkbox per language — English and the language being worked on pre-ticked, with All / None — each row carrying its own editable file name, seeded from the pattern, and a name typed over a row wins and stays put;
+- an **Archive name** field, defaulting to `<app>-translations`, with `.zip` as a fixed suffix;
+- **Include untranslated keys** — on by default.
+
+Naming each file matters more than naming the archive: the application receiving it decides what its locale files are called. `zh-Hans` here may have to arrive as `zh_CN.json`, and a Flutter app wants `messages_vi.arb`. Duplicate names are refused on both sides — two entries of one name make an archive that unzips to one file, silently losing a language.
+
+`POST /api/export` answers with the archive; a body rather than a query string because a dozen arbitrary file names do not belong in a URL. Contents are the same shape as the files on disk, so the result drops straight into an application.
+
+**The export is always the whole app**, never the current filters. An export is a release artifact; having it depend on a search box someone left filled in is how the wrong bundle ships.
+
+**Untranslated means what the rest of the app means by missing** — empty *or* still a verbatim copy of English — because it reuses `statusOf`. Unticking the box drops those keys entirely rather than shipping blanks, so the application falls back to English on its own. For School that is the difference between `km.json` with 3,339 entries and `km.json` with 2.
+
+### Two things that needed solving
+
+**No archive format in Node.** `zlib` deflates but does not package. `server/zip.ts` writes the PKZIP subset every unzip tool reads — local headers, a central directory, an end-of-central-directory record, CRC-32 and DOS timestamps — in about 80 lines, which beats a dependency in a mock backend.
+
+**Non-ASCII file names.** HTTP header values are latin1 and Node throws on anything outside it, so `filename="Bảng dịch.zip"` killed the response mid-flight. The header now carries both forms per RFC 6266: an ASCII fallback in `filename` and the percent-encoded UTF-8 in `filename*`, which the client prefers. A localization tool whose export breaks on a Vietnamese file name would be a poor joke.
+
+Related: Vite's dev server resets any request whose URL contains `../../`, before a plugin middleware sees it, so sanitising the name only on the server was not enough — the request never arrived. `src/lib/file_name.ts` is now shared by the dialog and the route, and the dialog shows the resolved name under the field when it differs from what was typed.
+
+### Verification
+
+- `npm run build` (tsc + vite) — passes. `npm run lint` — 0 errors, 7 warnings, all pre-existing.
+- Exported `en,vi,ja` from School: a 145 KB zip that `unzip -l` lists correctly and `unzip` extracts to three parseable files of 3,339 keys each.
+- Custom names honoured: `en-US.json`, `zh_CN.json` and `messages_vi.arb` came out of one archive with 3,339 keys each.
+- `includeUntranslated: false` over `en,vi,km`: 3,339 / 2,038 / 2 keys — matching the coverage endpoint's translated counts exactly.
+- Names: an empty entry name falls back to `<code>.json`, `../../evil.json` lands as `evil.json`, two entries called `same.json` / `SAME.json` are refused with 400, `school.zip` → `school`, `../../etc/pa:sswd.zip` → `etcpasswd`, and `Bảng dịch` survives the round trip with the archive contents intact.
+- Errors: no files → 400, no target → 400, unknown language → 404, an app with no keys → 404.
+- **Not verified:** still not clicked through in a browser.

@@ -9,11 +9,13 @@
  * it — `src/lib/api.ts` is the only other file that knows a server exists.
  *
  *   GET    /api/entries?target=&lang=    one app's keys, with status computed
+ *   GET    /api/templates?target=&lang=  one channel's message templates, text included
  *   POST   /api/keys                     create a key in one app, in every language
  *   DELETE /api/keys?target=&key=        delete one app's key, every language
  *   PUT    /api/translations/:lang?target=
  *                                        save a batch of one app's translations
- *   GET    /api/coverage                 per-language totals for the dashboard
+ *   POST   /api/export                   a .zip, one named file per language
+ *   GET    /api/coverage                 per-language totals, every app
  *   POST   /api/reset                    re-seed from sample-data
  *
  * The key is passed as a query parameter rather than a path segment because
@@ -25,9 +27,12 @@ import type { Plugin } from "vite"
 
 import type {
   CreateKeyRequest,
+  ExportRequest,
   SaveTranslationsRequest,
 } from "../src/lib/api_types.ts"
+import { safeFileName } from "../src/lib/file_name.ts"
 import { createStore, HttpError, type Store } from "./store.ts"
+import { createZip } from "./zip.ts"
 
 const BASE_PATH = "/api"
 
@@ -91,6 +96,18 @@ async function handle(
     return
   }
 
+  if (method === "GET" && path === "/templates") {
+    json(
+      res,
+      200,
+      store.templates(
+        required(query.get("target"), "target"),
+        required(query.get("lang"), "lang")
+      )
+    )
+    return
+  }
+
   if (method === "GET" && path === "/entries") {
     json(
       res,
@@ -118,6 +135,30 @@ async function handle(
         body.values
       )
     )
+    return
+  }
+
+  if (method === "POST" && path === "/export") {
+    const body = await readBody<ExportRequest>(req)
+
+    if (!body.target) {
+      throw new HttpError(400, `Missing "target"`)
+    }
+    if (!Array.isArray(body.files) || body.files.length === 0) {
+      throw new HttpError(400, "Pick at least one language to export.")
+    }
+
+    const files = store.exportFiles(
+      body.target,
+      body.files,
+      body.includeUntranslated !== false
+    )
+    const name = safeFileName(
+      body.name ?? "",
+      `${body.target.replaceAll("/", "-")}-translations`
+    )
+
+    zip(res, `${name}.zip`, createZip(files))
     return
   }
 
@@ -170,4 +211,26 @@ function json(res: ServerResponse, status: number, body: unknown) {
 function empty(res: ServerResponse) {
   res.statusCode = 204
   res.end()
+}
+
+function zip(res: ServerResponse, filename: string, body: Buffer) {
+  res.statusCode = 200
+  res.setHeader("content-type", "application/zip")
+  res.setHeader("content-length", body.length)
+  // The browser reads the download name from here, so the name typed into
+  // the export dialog survives the round trip.
+  //
+  // Two forms, per RFC 6266: header values are latin1, and Node throws on
+  // anything outside it, so a Vietnamese name can only travel percent-encoded
+  // in `filename*`. `filename` carries an ASCII fallback for clients that do
+  // not read the starred form.
+  res.setHeader(
+    "content-disposition",
+    [
+      "attachment",
+      `filename="${filename.replaceAll(/[^ -~]/g, "_")}"`,
+      `filename*=UTF-8''${encodeURIComponent(filename)}`,
+    ].join("; ")
+  )
+  res.end(body)
 }

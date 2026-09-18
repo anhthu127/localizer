@@ -3,7 +3,13 @@
  *
  *   server-data/
  *     keys.json                        the key registry — one row per key
+ *     templates.json                   the template registry — one row per template
  *     translations/<app>/<code>.json   one file per app per language
+ *
+ * A template is not a fourth kind of storage: its text lives in the same
+ * per-app language files as everything else, keyed `<template>.<field>`, and
+ * `templates.json` holds only what a key cannot carry — the message's name,
+ * who receives it, which product sends it. See `src/lib/template_data.ts`.
  *
  * Each app is its own key namespace — `web/school` and `app/parent` can both
  * define `nav.home` and mean different things — so the value files are nested
@@ -40,6 +46,7 @@ import type {
   LanguageCoverage,
   ReviewIssues,
   SaveTranslationsResponse,
+  TemplatesResponse,
 } from "../src/lib/api_types.ts"
 import {
   groupKeyOf,
@@ -51,10 +58,32 @@ import {
   type LocaleBundle,
   type TranslationRow,
 } from "../src/lib/locale_data.ts"
+import { safeEntryName } from "../src/lib/file_name.ts"
+import {
+  entryOf,
+  fieldOf,
+  fieldsOf,
+  templateKeyOf,
+  type TemplateEntry,
+  type TemplateFieldId,
+  type TemplateRecord,
+} from "../src/lib/template_data.ts"
 import { checkTranslation } from "../src/lib/validation.ts"
 
 /** The app the sample export belongs to — see `src/config/target_profiles.ts`. */
 const SEED_TARGET = "web/school"
+
+/**
+ * `sample-data/templates.json`, one of them: a registry row plus the text, so
+ * the seed is one readable file per concern rather than a registry and twelve
+ * bundles a human has to keep in step by hand.
+ */
+type TemplateSeed = TemplateRecord & {
+  source: Partial<Record<TemplateFieldId, string>>
+  translations?: Partial<
+    Record<LanguageCode, Partial<Record<TemplateFieldId, string>>>
+  >
+}
 
 /** Groups shown per language on the dashboard. */
 const TOP_GROUPS = 5
@@ -75,14 +104,24 @@ export function createStore(root: string) {
   const dataDir = join(root, "server-data")
   const translationsDir = join(dataDir, "translations")
   const keysFile = join(dataDir, "keys.json")
+  const templatesFile = join(dataDir, "templates.json")
   const seedDir = join(root, "sample-data", "locale")
+  const templateSeedFile = join(root, "sample-data", "templates.json")
 
   // Files are the source of truth, but parsing 13 × 200 KB on every request
   // would make the workspace feel like a slideshow. Everything is cached and
   // invalidated on write.
   let keyCache: KeyRecord[] | null = null
+  let templateCache: TemplateRecord[] | null = null
   const bundleCache = new Map<string, LocaleBundle>()
   let coverageCache: CoverageResponse | null = null
+
+  const clearCaches = () => {
+    keyCache = null
+    templateCache = null
+    bundleCache.clear()
+    coverageCache = null
+  }
 
   const readJson = <T>(file: string): T =>
     JSON.parse(readFileSync(file, "utf8")) as T
@@ -118,30 +157,90 @@ export function createStore(root: string) {
     )
     const createdAt = new Date().toISOString()
 
-    writeJson(
-      keysFile,
-      Object.keys(source).map(
-        (key): KeyRecord => ({
+    const records: KeyRecord[] = Object.keys(source).map((key) => ({
+      key,
+      group: groupKeyOf(key),
+      target: SEED_TARGET,
+      origin: "import",
+      createdAt,
+    }))
+
+    writeJson(keysFile, [...records, ...seedTemplates()])
+  }
+
+  /**
+   * Fans `sample-data/templates.json` out into the same storage everything
+   * else uses: one key per field in the registry, and its text in that
+   * channel's language files. A template with no translation for a language
+   * still gets an empty value there, exactly as `createKey` does, so it reads
+   * as missing rather than as absent.
+   *
+   * Returns the key records to add, rather than writing them, so the registry
+   * is written once.
+   */
+  function seedTemplates(): KeyRecord[] {
+    if (!existsSync(templateSeedFile)) {
+      writeJson(templatesFile, [])
+      return []
+    }
+
+    const seeds = readJson<TemplateSeed[]>(templateSeedFile)
+    const records: KeyRecord[] = []
+    const registry: TemplateRecord[] = []
+    // `${target}:${code}` → that file's contents, built up across templates.
+    const bundles = new Map<string, LocaleBundle>()
+
+    for (const { source, translations, ...template } of seeds) {
+      registry.push(template)
+
+      for (const field of fieldsOf(template.channel)) {
+        const text = source[field.id]
+        if (!text) {
+          continue
+        }
+
+        const key = templateKeyOf(template.id, field.id)
+        records.push({
           key,
           group: groupKeyOf(key),
-          target: SEED_TARGET,
+          target: template.target,
           origin: "import",
-          createdAt,
+          createdAt: template.createdAt,
         })
-      )
-    )
+
+        for (const language of languages) {
+          const id = `${template.target}:${language.code}`
+          let values = bundles.get(id)
+          if (!values) {
+            values = {}
+            bundles.set(id, values)
+          }
+          values[key] =
+            language.code === SOURCE_LANGUAGE
+              ? text
+              : (translations?.[language.code]?.[field.id] ?? "")
+        }
+      }
+    }
+
+    for (const [id, values] of bundles) {
+      const [target, code] = id.split(":")
+      writeJson(bundleFile(target, code as LanguageCode), values)
+    }
+
+    writeJson(templatesFile, registry)
+    return records
   }
 
   function ensureSeeded() {
     // The bundle check also re-seeds a `server-data` left by an older layout.
     if (
       !existsSync(keysFile) ||
+      !existsSync(templatesFile) ||
       !existsSync(bundleFile(SEED_TARGET, SOURCE_LANGUAGE))
     ) {
       seed()
-      keyCache = null
-      bundleCache.clear()
-      coverageCache = null
+      clearCaches()
     }
   }
 
@@ -149,6 +248,12 @@ export function createStore(root: string) {
     ensureSeeded()
     keyCache ??= readJson<KeyRecord[]>(keysFile)
     return keyCache
+  }
+
+  function templateRecords(): TemplateRecord[] {
+    ensureSeeded()
+    templateCache ??= readJson<TemplateRecord[]>(templatesFile)
+    return templateCache
   }
 
   function bundle(target: string, code: LanguageCode): LocaleBundle {
@@ -308,6 +413,50 @@ export function createStore(root: string) {
       }
     },
 
+    /* ------------------------------------------------------------- templates */
+
+    /**
+     * One channel's templates, with their text, in one language.
+     *
+     * The values travel with the list rather than behind a per-template
+     * request: a channel holds tens of templates of a few short fields, so the
+     * whole channel is a few kilobytes and the translate dialog can open
+     * without a round trip.
+     *
+     * `needsReview` is counted with the same `checkTranslation` the dialog
+     * shows inline, minus the length rule — that one needs the target's
+     * profile, which lives in `src/config` and is the browser's business.
+     */
+    templates(target: string, code: string): TemplatesResponse {
+      const language = languageOf(code)
+      const source = bundle(target, SOURCE_LANGUAGE)
+      const values = bundle(target, language)
+
+      const entries: TemplateEntry[] = templateRecords()
+        .filter((record) => record.target === target)
+        .map((record) =>
+          entryOf(record, source, values, language, (value) => {
+            const field = fieldOf(record.channel, value.field)
+            return (
+              checkTranslation(value.source, value.target, {
+                language,
+                lengthBudget: Number.POSITIVE_INFINITY,
+                maxLength: field.maxLength,
+                format: field.format,
+              }).length > 0
+            )
+          })
+        )
+        .sort((a, b) => a.template.name.localeCompare(b.template.name))
+
+      return {
+        target,
+        language,
+        sourceLanguage: SOURCE_LANGUAGE,
+        templates: entries,
+      }
+    },
+
     saveTranslations(
       target: string,
       code: string,
@@ -322,6 +471,69 @@ export function createStore(root: string) {
       })
 
       return { saved, file: relativeBundlePath(target, language) }
+    },
+
+    /* ---------------------------------------------------------------- export */
+
+    /**
+     * One JSON file per requested language, for this app only — the same
+     * shape as the files on disk, so an export can be dropped straight back
+     * into an application.
+     *
+     * The caller names each file, because the application receiving it decides
+     * what its locale files are called: `zh-Hans` here may have to arrive as
+     * `zh_CN.json`, and a Flutter app wants `.arb`.
+     *
+     * `includeUntranslated` keeps the keys `statusOf` calls missing — empty,
+     * or still a copy of the English source. That is what a translator wants
+     * to receive. Dropping them is what a runtime bundle wants: the key is
+     * absent, so the application falls back to English by itself rather than
+     * shipping a blank string or a duplicate.
+     */
+    exportFiles(
+      target: string,
+      requested: { language: string; name: string }[],
+      includeUntranslated: boolean
+    ): { name: string; data: string }[] {
+      const records = keyRecords().filter((record) => record.target === target)
+      if (records.length === 0) {
+        throw new HttpError(404, `No keys in ${target} to export`)
+      }
+
+      const source = bundle(target, SOURCE_LANGUAGE)
+      const taken = new Set<string>()
+
+      return requested.map((file) => {
+        const language = languageOf(file.language)
+        const name = safeEntryName(file.name, `${language}.json`)
+
+        // Two entries of the same name make an archive that unzips to one
+        // file, silently losing a language. Better to refuse.
+        if (taken.has(name.toLowerCase())) {
+          throw new HttpError(
+            400,
+            `Two files are both called "${name}" — give each language its own name.`
+          )
+        }
+        taken.add(name.toLowerCase())
+
+        const values = bundle(target, language)
+        const out: LocaleBundle = {}
+
+        for (const record of records) {
+          const value = values[record.key] ?? ""
+          if (
+            !includeUntranslated &&
+            statusOf(source[record.key] ?? "", value, language) === "missing"
+          ) {
+            continue
+          }
+          out[record.key] = value
+        }
+
+        return { name, data: `${JSON.stringify(out, null, 2)}
+` }
+      })
     },
 
     /* -------------------------------------------------------------- coverage */
@@ -444,9 +656,7 @@ export function createStore(root: string) {
     /** Throws the working data away and re-seeds from `sample-data`. */
     reset() {
       seed()
-      keyCache = null
-      bundleCache.clear()
-      coverageCache = null
+      clearCaches()
     },
   }
 }

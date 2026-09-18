@@ -40,11 +40,14 @@ npm run mock:reset  # delete server-data/, re-seeded on the next request
 server/            the mock backend (Vite middleware) — see below
   mock_api.ts      routing
   store.ts         JSON files under server-data/
-sample-data/       the seed: one locale bundle per language
+sample-data/
+  locale/          the seed: one locale bundle per language
+  templates.json   the seed: every email, SMS and notification template
 src/
   components/
     dashboard/     home screen cards
     layout/        app shell (sidebar, header)
+    templates/     template table, translate dialog, rich text editor, preview
     translations/  workspace row, filters, profile card
     ui/            shadcn/ui components (generated — edit with care)
   config/          nav tree, per-target profiles
@@ -53,8 +56,11 @@ src/
     api.ts         the HTTP client — the only module that knows a server exists
     api_types.ts   the request/response contract, shared with server/
     locale_data.ts the domain model and its pure rules, shared with server/
+    template_data.ts   the template model and field schemas, shared with server/
+    template_preview.ts placeholder samples + the HTML whitelist
     validation.ts  per-row checks, shared with server/
-  pages/           screens
+  pages/
+    target_page.tsx  picks the screen from the target's content kind
   index.css        Tailwind entry + shadcn design tokens
 ```
 
@@ -78,6 +84,7 @@ anything:
 ```
 server-data/                      (gitignored, disposable)
   keys.json                       the key registry: key, group, target, origin
+  templates.json                  the template registry: name, category, owner
   translations/<app>/<code>.json  one file per app per language
 ```
 
@@ -95,18 +102,67 @@ once, and in that app only.
 | Method | Path                                 | Purpose                                     |
 | ------ | ------------------------------------ | ------------------------------------------- |
 | GET    | `/api/entries?target=&lang=`         | one app's keys, status computed            |
+| GET    | `/api/templates?target=&lang=`       | one channel's templates, text included      |
 | POST   | `/api/keys`                          | create a key in one app, in every language  |
 | DELETE | `/api/keys?target=&key=`             | delete one app's key, from every language   |
 | PUT    | `/api/translations/:lang?target=`    | save a batch of one app's translations      |
+| POST   | `/api/export`                        | a .zip, one named file per language         |
 | GET    | `/api/coverage`                      | totals across every app, for the dashboard  |
 | POST   | `/api/reset`                         | re-seed from `sample-data`                  |
 
 Every route but `/coverage` and `/reset` is scoped to one app, because the app
 is what owns the keys.
 
+`/export` answers with a zip built by `server/zip.ts` — about 80 lines of
+PKZIP headers, which beat a dependency for the job. The request names every
+file in it, because the application receiving the archive decides what its
+locale files are called: `zh-Hans` here may have to arrive as `zh_CN.json`, and
+a Flutter app wants `.arb`. That is a body rather than a query string, hence
+the POST.
+
+Contents are the same shape as the files on disk, so an export can be dropped
+straight into an application. `includeUntranslated: false` leaves out the keys
+`statusOf` calls missing, which is what a runtime bundle wants: the key is
+absent, so the app falls back to English by itself.
+
 `statusOf` and `checkTranslation` are imported by the server from
 `src/lib` rather than restated, so the browser and the backend cannot disagree
 about what "missing" means.
+
+## Message templates
+
+The three Messages targets — `others/email`, `others/sms`,
+`others/notification` — hold templates rather than loose UI strings, and get
+their own screen: a table of messages, and a two-panel dialog that translates
+one of them beside a rendered preview.
+
+A template is **not** a fourth kind of storage. Its text is ordinary keys in
+that channel's bundle, one per field —
+
+```
+invite_coach.subject   invite_coach.body   invite_coach.cta   …
+```
+
+— so status, validation, saving, export and the dashboard's coverage all work
+on it unchanged, and the translate dialog saves through
+`PUT /api/translations/:lang` like every other screen. `templates.json` holds
+only what a key cannot carry: the message's name, who receives it (the
+category), which product sends it (the owner) and who created it. The field
+schema per channel lives in `src/lib/template_data.ts` and is shared with the
+server.
+
+The mail body is edited as rich text (`components/templates/rich_text_editor.tsx`,
+`contenteditable` + `execCommand`, no editor dependency) with the raw HTML one
+toggle away. Both the editor's output and the preview's input go through the
+tag whitelist in `lib/template_preview.ts`: the editor *unwraps* what it does
+not know, because that markup came from the browser; the preview *escapes* it,
+because that markup came from a bundle and a translator should see the
+`<script>` they are about to ship. Nothing else is ever handed to
+`dangerouslySetInnerHTML`.
+
+Two rows in the seed are deliberately wrong, so the "needs review" counts have
+something to find: `visitation_scheduled` is missing a `</p>` in Vietnamese, and
+`push_story_ready` translates `{firstName}` as `{studentName}`.
 
 **Swapping in the real backend:** delete `mockApi()` from `vite.config.ts`, set
 `VITE_API_URL` to the service, and reconcile `src/lib/api.ts` with whatever
@@ -119,7 +175,11 @@ than shared.
 
 ## Current state
 
-Routing, a dashboard, and a per-app workspace — list, filters, row editor,
-bulk save, and an add-key dialog — all against the mock backend. No auth, no
-publishing, no releases, no import. Only School is seeded; the other nine apps
-open on their profile and an invitation to add the first key.
+Routing, a dashboard, a per-app workspace — list, filters, row editor, bulk
+save, an add-key dialog and a zip export — and the message-template screen
+above, all against the mock backend. No auth, no publishing, no releases, no
+import, and no way to create a template in the UI yet (they are seeded).
+
+Seeded: School, from `sample-data/locale`, and the three message channels, from
+`sample-data/templates.json`. The other six apps open on their profile and an
+invitation to add the first key.

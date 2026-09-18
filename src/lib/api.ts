@@ -14,7 +14,9 @@ import type {
   CreateKeyRequest,
   CreateKeyResponse,
   EntriesResponse,
+  ExportRequest,
   SaveTranslationsResponse,
+  TemplatesResponse,
 } from "@/lib/api_types"
 import type { LanguageCode } from "@/lib/locale_data"
 
@@ -38,7 +40,7 @@ export function messageOf(cause: unknown): string {
   return String(cause)
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function send(path: string, init?: RequestInit): Promise<Response> {
   let response: Response
 
   try {
@@ -50,7 +52,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     })
   } catch (cause) {
     // A dead server is the one error the mock makes likely, so name it.
-    throw new ApiError(0, `Cannot reach the API at ${BASE_URL} — ${messageOf(cause)}`)
+    throw new ApiError(
+      0,
+      `Cannot reach the API at ${BASE_URL} — ${messageOf(cause)}`
+    )
   }
 
   if (!response.ok) {
@@ -60,6 +65,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       body?.error ?? `${response.status} ${response.statusText}`
     )
   }
+
+  return response
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await send(path, init)
 
   if (response.status === 204) {
     return undefined as T
@@ -80,6 +91,16 @@ const query = (params: Record<string, string | undefined>) => {
 
 export function fetchEntries(target: string, lang: LanguageCode) {
   return request<EntriesResponse>(`/entries?${query({ target, lang })}`)
+}
+
+/**
+ * One channel's templates, text included — see `TemplatesResponse`.
+ *
+ * There is no save counterpart: a template's fields are ordinary keys, so the
+ * dialog writes through `saveTranslations` below.
+ */
+export function fetchTemplates(target: string, lang: LanguageCode) {
+  return request<TemplatesResponse>(`/templates?${query({ target, lang })}`)
 }
 
 export function createKey(input: CreateKeyRequest) {
@@ -109,6 +130,42 @@ export function saveTranslations(
 
 export function fetchCoverage() {
   return request<CoverageResponse>("/coverage")
+}
+
+/**
+ * A .zip of one JSON file per language, for one app.
+ *
+ * The name comes back in `content-disposition` rather than being rebuilt
+ * here, so what the browser saves is what the server actually named it.
+ */
+export async function exportBundle(input: ExportRequest) {
+  const response = await send("/export", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
+
+  // `filename*` first: it is the percent-encoded UTF-8 one, and the plain
+  // `filename` beside it is an ASCII fallback with the accents flattened.
+  const disposition = response.headers.get("content-disposition") ?? ""
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  const plain = /filename="([^"]+)"/.exec(disposition)
+
+  return {
+    blob: await response.blob(),
+    filename: encoded
+      ? decodeURIComponent(encoded[1])
+      : (plain?.[1] ?? "translations.zip"),
+  }
+}
+
+/** Hands the browser a file to save. */
+export function download(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
 }
 
 /** Throws the mock backend's working data away and re-seeds it. */
