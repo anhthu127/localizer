@@ -11,6 +11,7 @@ Base for the Localizer redesign — the replacement for the legacy CRA app in `.
 | Styling    | Tailwind CSS v4 (`@tailwindcss/vite`, CSS-first)  |
 | Components | shadcn/ui (`base-nova` style, Base UI primitives) |
 | Icons      | lucide-react                                      |
+| Motion     | `motion` (Framer Motion's successor package)      |
 | Toasts     | sonner                                            |
 | Theming    | next-themes (`class` strategy, light/dark)        |
 | Lint       | oxlint                                            |

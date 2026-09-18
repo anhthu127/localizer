@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react"
 import { Link } from "react-router"
 
+import { Lift } from "@/components/motion/lift"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { navPath, type NavMatch } from "@/config/nav_items"
@@ -10,28 +11,33 @@ export function ShortcutCard({ section, leaf }: NavMatch) {
   return (
     <Link
       to={navPath(section, leaf)}
-      className="focus-visible:ring-ring rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+      className="focus-visible:ring-ring group block h-full rounded-xl focus-visible:ring-2 focus-visible:outline-none"
     >
-      <Card size="sm" className="hover:bg-muted/50 h-full transition-colors">
-        <CardContent className="flex items-center gap-3">
-          <div className="bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-            <leaf.icon className="size-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium">{leaf.title}</div>
-            <div className="text-muted-foreground truncate text-xs">
-              {section.title}
+      <Lift className="h-full">
+        <Card
+          size="sm"
+          className="hover:bg-muted/50 hover:border-foreground/20 h-full transition-colors"
+        >
+          <CardContent className="flex items-center gap-3">
+            <div className="bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110">
+              <leaf.icon className="size-4" />
             </div>
-          </div>
-          {leaf.count ? (
-            <Badge variant="secondary" title="Outstanding strings">
-              {leaf.count}
-            </Badge>
-          ) : (
-            <ArrowUpRight className="text-muted-foreground size-4" />
-          )}
-        </CardContent>
-      </Card>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">{leaf.title}</div>
+              <div className="text-muted-foreground truncate text-xs">
+                {section.title}
+              </div>
+            </div>
+            {leaf.count ? (
+              <Badge variant="secondary" title="Outstanding strings">
+                {leaf.count}
+              </Badge>
+            ) : (
+              <ArrowUpRight className="text-muted-foreground size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            )}
+          </CardContent>
+        </Card>
+      </Lift>
     </Link>
   )
 }

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Search } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { Navigate, useParams, useSearchParams } from "react-router"
 import { toast } from "sonner"
 
@@ -31,6 +32,7 @@ import { findNavLeaf } from "@/config/nav_items"
 import { kindLabel, profileOf } from "@/config/target_profiles"
 import { useTranslationRows } from "@/hooks/use_translation_rows"
 import { deleteKey, messageOf, saveTranslations } from "@/lib/api"
+import { fadeIn, slideUpBar, transitions } from "@/lib/motion"
 import {
   groupOptionsOf,
   languages,
@@ -362,7 +364,22 @@ export function TranslationsPage() {
             </Button>
           )}
           <Badge variant="outline" className="ml-2">
-            {filtered.length} keys
+            {/* Keyed so the count crossfades when a filter narrows the list,
+                instead of the digits flicking over in place. */}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={filtered.length}
+                variants={fadeIn}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                transition={transitions.fast}
+                className="tabular-nums"
+              >
+                {filtered.length}
+              </motion.span>
+            </AnimatePresence>
+            &nbsp;keys
           </Badge>
         </div>
       )}
@@ -374,11 +391,16 @@ export function TranslationsPage() {
       )}
 
       {isLoading && (
-        <div className="flex flex-col gap-3 p-4">
+        <motion.div
+          className="flex flex-col gap-3 p-4"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+        >
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-20 w-full" />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {!isLoading && !error && !hasKeys && (
@@ -440,25 +462,36 @@ export function TranslationsPage() {
         </>
       )}
 
-      {dirtyKeys.length > 0 && (
-        <div className="bg-background flex items-center gap-3 border-t px-4 py-3">
-          <span className="text-sm">
-            {dirtyKeys.length} unsaved {dirtyKeys.length === 1 ? "key" : "keys"}
-          </span>
-          <div className="ml-auto flex gap-2">
-            <Button
-              variant="outline"
-              disabled={isSaving}
-              onClick={() => setEdits({})}
-            >
-              Discard
-            </Button>
-            <Button disabled={isSaving} onClick={handleSave}>
-              {isSaving ? "Saving…" : "Save all"}
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* The tray slides up out of the bottom edge on the first edit and drops
+          back out once everything is saved or discarded. */}
+      <AnimatePresence>
+        {dirtyKeys.length > 0 && (
+          <motion.div
+            className="bg-background flex items-center gap-3 border-t px-4 py-3 shadow-[0_-8px_24px_-16px_rgb(0_0_0/0.4)]"
+            variants={slideUpBar}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <span className="text-sm">
+              {dirtyKeys.length} unsaved{" "}
+              {dirtyKeys.length === 1 ? "key" : "keys"}
+            </span>
+            <div className="ml-auto flex gap-2">
+              <Button
+                variant="outline"
+                disabled={isSaving}
+                onClick={() => setEdits({})}
+              >
+                Discard
+              </Button>
+              <Button disabled={isSaving} onClick={handleSave}>
+                {isSaving ? "Saving…" : "Save all"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

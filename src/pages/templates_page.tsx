@@ -1,7 +1,9 @@
 import { useMemo } from "react"
 import { AlertTriangle, Search } from "lucide-react"
+import { motion } from "motion/react"
 import { Navigate, useParams, useSearchParams } from "react-router"
 
+import { FadeIn } from "@/components/motion/fade_in"
 import { TemplateDialog } from "@/components/templates/template_dialog"
 import { TemplateTable } from "@/components/templates/template_table"
 import { Badge } from "@/components/ui/badge"
@@ -245,15 +247,19 @@ export function TemplatesPage() {
       )}
 
       {isLoading && (
-        <div className="flex flex-col gap-3 p-4">
+        <motion.div
+          className="flex flex-col gap-3 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-12 w-full" />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {!isLoading && !error && templates.length === 0 && (
-        <div className="min-h-0 flex-1 overflow-auto p-6">
+        <FadeIn className="min-h-0 flex-1 overflow-auto p-6">
           <Card className="mx-auto max-w-2xl">
             <CardHeader>
               <CardTitle>No {channelLabel[channel].toLowerCase()} yet</CardTitle>
@@ -264,11 +270,11 @@ export function TemplatesPage() {
               creating one in the UI is not built yet.
             </CardContent>
           </Card>
-        </div>
+        </FadeIn>
       )}
 
       {!isLoading && !error && templates.length > 0 && (
-        <div className="min-h-0 flex-1 overflow-auto">
+        <FadeIn className="min-h-0 flex-1 overflow-auto">
           <TemplateTable
             channel={channel}
             entries={filtered}
@@ -280,7 +286,7 @@ export function TemplatesPage() {
               No template matches these filters.
             </p>
           )}
-        </div>
+        </FadeIn>
       )}
 
       {open && (
