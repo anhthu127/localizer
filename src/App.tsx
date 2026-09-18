@@ -1,21 +1,27 @@
 import { ThemeProvider } from "next-themes"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router"
 
-import { AppHeader } from "@/components/layout/app_header"
-import { AppSidebar } from "@/components/layout/app_sidebar"
+import { AppLayout } from "@/components/layout/app_layout"
 import { Toaster } from "@/components/ui/sonner"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { DashboardPage } from "@/pages/dashboard_page"
 import { TranslationsPage } from "@/pages/translations_page"
 
 function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <AppHeader title="Translations" />
-          <TranslationsPage />
-        </SidebarInset>
-      </SidebarProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<DashboardPage />} />
+            {/* `/web/school`, `/app/parent`, … — one route per nav leaf. */}
+            <Route
+              path=":sectionId/:leafId"
+              element={<TranslationsPage />}
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
       <Toaster />
     </ThemeProvider>
   )
