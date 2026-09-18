@@ -1,10 +1,19 @@
-import { AlertTriangle, Copy, Info, Trash2 } from "lucide-react"
+import {
+  AlertTriangle,
+  ClipboardPaste,
+  Copy,
+  Info,
+  Trash2,
+} from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { ContentKind, TargetProfile } from "@/config/target_profiles"
+import { copyText } from "@/lib/clipboard"
+import { formatDateTime } from "@/lib/format_date"
 import type { LanguageCode } from "@/lib/locale_data"
 import type {
   TranslationRow as Row,
@@ -66,10 +75,21 @@ export function TranslationRow({
   })
   const hasError = issues.some((issue) => issue.level === "error")
 
+  const handleCopy = async () => {
+    if (await copyText(row.source)) {
+      toast.success("English copied to the clipboard")
+    } else {
+      toast.error("Could not copy", {
+        description: "The browser blocked clipboard access for this page.",
+      })
+    }
+  }
+
   return (
     <div
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-3 border-b px-4 py-3",
+        ROW_GRID,
+        "items-start gap-3 border-b px-4 py-3",
         isDirty && "bg-accent/40",
         hasError && "border-l-destructive border-l-2"
       )}
@@ -103,14 +123,28 @@ export function TranslationRow({
         </div>
         <div className="mt-1 flex items-start gap-2">
           <p className="text-sm">{row.source}</p>
+          {/* Two different things a translator wants from the English, and one
+              button used to do the second while its icon promised the first:
+              take it away to a CAT tool, or drop it in as the starting point. */}
           <Button
             variant="ghost"
             size="icon"
             className="size-6 shrink-0"
-            aria-label={`Copy English for ${row.key}`}
-            onClick={() => onChange(row.key, row.source)}
+            aria-label={`Copy the English for ${row.key} to the clipboard`}
+            title="Copy to clipboard"
+            onClick={handleCopy}
           >
             <Copy className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6 shrink-0"
+            aria-label={`Paste the English for ${row.key} into the translation`}
+            title="Paste into the translation"
+            onClick={() => onChange(row.key, row.source)}
+          >
+            <ClipboardPaste className="size-3.5" />
           </Button>
         </div>
       </div>
@@ -143,7 +177,71 @@ export function TranslationRow({
           </p>
         ))}
       </div>
+
+      <Audit row={row} />
     </div>
+  )
+}
+
+/**
+ * The row's grid, shared with the header above the list so the two line up.
+ * The audit column is the first thing to go when the window narrows: on a
+ * laptop the editor is worth more than the provenance, and the same facts are
+ * in the row's title attributes either way.
+ */
+export const ROW_GRID =
+  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_13rem]"
+
+/**
+ * Who added the key and who last wrote this language's value.
+ *
+ * The legacy app recorded neither, so a wrong string was a question nobody
+ * could answer — hence the column. Four labelled facts rather than two stamps:
+ * a reviewer reads down the label column looking for one of them, and
+ * "Updated at" says what it is without being learned first.
+ *
+ * The updated pair is empty only while the value is — text that came in with
+ * the import is stamped with the import rather than left blank.
+ */
+function Audit({ row }: { row: Row }) {
+  return (
+    <dl className="text-muted-foreground hidden min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-2 gap-y-0.5 text-xs xl:grid">
+      <Fact label="Created by" value={row.created.by} />
+      <Fact label="Created at" value={row.created.at} isInstant />
+      <Fact label="Updated by" value={row.updated?.by} />
+      <Fact label="Updated at" value={row.updated?.at} isInstant />
+    </dl>
+  )
+}
+
+/**
+ * `isInstant` marks the value as an ISO timestamp: it is read out in the
+ * team's fixed format, and the exact instant stays in the tooltip for anyone
+ * comparing two rows to the second.
+ */
+function Fact({
+  label,
+  value,
+  isInstant,
+}: {
+  label: string
+  value?: string
+  isInstant?: boolean
+}) {
+  return (
+    <>
+      <dt className="shrink-0 text-[10px] tracking-wide uppercase">{label}</dt>
+      {value === undefined ? (
+        <dd>—</dd>
+      ) : (
+        <dd
+          className={cn("text-foreground truncate", isInstant && "tabular-nums")}
+          title={value}
+        >
+          {isInstant ? formatDateTime(value) : value}
+        </dd>
+      )}
+    </>
   )
 }
 

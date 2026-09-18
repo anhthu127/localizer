@@ -1,11 +1,11 @@
 /**
  * The localization domain model — types and the pure rules over them.
  *
- * This module has no I/O and no browser API in it, on purpose: the mock server
- * in `server/` imports it directly, so status, key format and group extraction
- * are defined once and the two sides cannot drift. Data itself arrives over
- * HTTP — see `lib/api.ts` for the client and `server/mock_api.ts` for the
- * stand-in backend that serves it from `server-data/`.
+ * This module has no I/O and no browser API in it, on purpose: the mock
+ * backend in `src/mock/` imports it directly, so status, key format and group
+ * extraction are defined once and the two sides cannot drift. Data itself
+ * arrives over HTTP — see `lib/api.ts` for the client and `src/mock/router.ts`
+ * for the stand-in backend that answers it.
  */
 
 export type LanguageCode =
@@ -75,6 +75,19 @@ export type KeyOrigin = "import" | "manual"
  */
 export type TranslationStatus = "translated" | "missing"
 
+/**
+ * Who did something, and when — `{ by: "Irene Do", at: "2026-03-02T07:11:00Z" }`.
+ *
+ * `at` is an ISO 8601 instant; the screen decides how to read it out.
+ */
+export type AuditStamp = {
+  by: string
+  at: string
+}
+
+/** The author recorded for text that arrived with a bundle import. */
+export const IMPORT_AUTHOR = "Bundle import"
+
 export type TranslationRow = {
   key: string
   /** First dot-segment of the key. */
@@ -83,6 +96,17 @@ export type TranslationRow = {
   target: string
   status: TranslationStatus
   origin: KeyOrigin
+  /** Who put the key in the registry, and when — the same in every language. */
+  created: AuditStamp
+  /**
+   * Who last wrote *this language's* value, and when. Absent while the value
+   * is empty, because nobody has written one yet.
+   *
+   * Values that came in with the import predate the trail, so they are stamped
+   * with the import rather than left blank: "nobody has touched it" and "we
+   * have no record" are different answers to a reviewer.
+   */
+  updated?: AuditStamp
 }
 
 export function groupKeyOf(key: string) {

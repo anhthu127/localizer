@@ -14,7 +14,7 @@
  * registry adds what a key cannot carry: a human name for the whole message,
  * and the category and owner a translator filters by.
  *
- * No I/O here — `server/store.ts` imports this module directly, so the browser
+ * No I/O here — `src/mock/store.ts` imports this module directly, so the browser
  * and the backend cannot disagree about a template's field schema.
  */
 

@@ -1,13 +1,16 @@
 /**
  * The only module in the app that knows a server exists.
  *
- * It currently talks to the mock backend in `server/mock_api.ts`, which serves
- * `/api` from the Vite dev server. Pointing it at the real service is a
+ * It currently talks to the mock backend in `src/mock/`, which serves the same
+ * routes from two places: the Vite dev server at `/api` while you develop, and
+ * the tab itself once the app is built and deployed to a static host, where
+ * there is no server to serve them. Pointing it at the real service is a
  * `VITE_API_URL` away; if that service's shapes differ from
  * `lib/api_types.ts`, this file is where the mapping goes and no screen has to
  * change.
  */
 
+import { currentUser } from "@/config/current_user"
 import type {
   ApiErrorBody,
   CoverageResponse,
@@ -15,12 +18,21 @@ import type {
   CreateKeyResponse,
   EntriesResponse,
   ExportRequest,
+  SaveTranslationsRequest,
   SaveTranslationsResponse,
   TemplatesResponse,
 } from "@/lib/api_types"
 import type { LanguageCode } from "@/lib/locale_data"
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api"
+
+/**
+ * A built app with no `VITE_API_URL` has nothing to fetch from: the dev
+ * server's `/api` is a dev-server plugin, and a static host serves files.
+ * Rather than ship a demo where every screen errors, the mock moves into the
+ * browser — same routes, IndexedDB instead of `server-data/`.
+ */
+const IN_BROWSER = import.meta.env.PROD && !import.meta.env.VITE_API_URL
 
 export class ApiError extends Error {
   status: number
@@ -43,13 +55,22 @@ export function messageOf(cause: unknown): string {
 async function send(path: string, init?: RequestInit): Promise<Response> {
   let response: Response
 
+  const request: RequestInit = {
+    ...init,
+    headers: init?.body
+      ? { "content-type": "application/json", ...init.headers }
+      : init?.headers,
+  }
+
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      ...init,
-      headers: init?.body
-        ? { "content-type": "application/json", ...init.headers }
-        : init?.headers,
-    })
+    if (IN_BROWSER) {
+      // Loaded on demand so the mock is its own chunk, and not one a build
+      // with a real `VITE_API_URL` ever downloads.
+      const { localFetch } = await import("@/mock/browser_backend")
+      response = await localFetch(path, request)
+    } else {
+      response = await fetch(`${BASE_URL}${path}`, request)
+    }
   } catch (cause) {
     // A dead server is the one error the mock makes likely, so name it.
     throw new ApiError(
@@ -103,10 +124,19 @@ export function fetchTemplates(target: string, lang: LanguageCode) {
   return request<TemplatesResponse>(`/templates?${query({ target, lang })}`)
 }
 
+/**
+ * The author travels with the write, here rather than from every screen that
+ * saves: who is signed in is not something a dialog should have to remember.
+ * A real service reads it off the session instead and ignores what is sent —
+ * see `config/current_user.ts`.
+ */
 export function createKey(input: CreateKeyRequest) {
   return request<CreateKeyResponse>("/keys", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      createdBy: currentUser.name,
+      ...input,
+    } satisfies CreateKeyRequest),
   })
 }
 
@@ -123,7 +153,10 @@ export function saveTranslations(
     `/translations/${lang}?${query({ target })}`,
     {
       method: "PUT",
-      body: JSON.stringify({ values }),
+      body: JSON.stringify({
+        values,
+        by: currentUser.name,
+      } satisfies SaveTranslationsRequest),
     }
   )
 }

@@ -20,6 +20,7 @@ import {
   type TemplateEntry,
   type TemplateOwner,
 } from "@/lib/template_data"
+import { formatDate } from "@/lib/format_date"
 import { smsInfo } from "@/lib/validation"
 
 type TemplateTableProps = {
@@ -197,16 +198,4 @@ function TranslationCell({ entry }: { entry: TemplateEntry }) {
       )}
     </div>
   )
-}
-
-/** Fixed locale, so the column reads the same for everyone on the team. */
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-})
-
-function formatDate(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : dateFormat.format(date)
 }

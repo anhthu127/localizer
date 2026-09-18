@@ -1,13 +1,14 @@
 /**
  * The HTTP contract between the app and the localization service.
  *
- * Both sides import this file: `lib/api.ts` in the browser and
- * `server/mock_api.ts` in Node. When the real backend arrives, this is the
+ * Both sides import this file: `lib/api.ts` in the browser and the mock
+ * backend in `src/mock/`. When the real backend arrives, this is the
  * document to hand its author — and the only file that has to change if their
  * shapes differ.
  */
 
 import type {
+  AuditStamp,
   KeyOrigin,
   LanguageCode,
   TranslationRow,
@@ -23,7 +24,21 @@ export type KeyRecord = {
   target: string
   origin: KeyOrigin
   createdAt: string
+  /**
+   * Who added it. `IMPORT_AUTHOR` for keys that arrived with a bundle, a
+   * person's name for keys added in the app.
+   */
+  createdBy: string
 }
+
+/**
+ * Who last wrote each value of one app's language file — the other half of the
+ * audit trail, kept beside the bundle rather than inside it so the bundle stays
+ * a plain `key: text` document that can be shipped as-is.
+ *
+ * `server-data/audit/<app>/<code>.json`, keyed the same way the bundle is.
+ */
+export type AuditLog = Record<string, AuditStamp>
 
 /** `GET /api/entries?target=&lang=` — one app's keys, status included. */
 export type EntriesResponse = {
@@ -55,6 +70,11 @@ export type CreateKeyRequest = {
   source: string
   /** The app the key belongs to; it is created for that app only. */
   target: string
+  /**
+   * Who is adding it, for the audit trail. Sent by the browser only because
+   * the mock has no session to read it from — see `config/current_user.ts`.
+   */
+  createdBy?: string
 }
 
 export type CreateKeyResponse = {
@@ -66,6 +86,8 @@ export type CreateKeyResponse = {
 /** `PUT /api/translations/:lang?target=` */
 export type SaveTranslationsRequest = {
   values: Record<string, string>
+  /** Who is saving them, for the audit trail — see `CreateKeyRequest`. */
+  by?: string
 }
 
 export type SaveTranslationsResponse = {

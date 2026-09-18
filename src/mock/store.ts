@@ -1,10 +1,16 @@
 /**
- * The mock backend's storage layer: plain JSON files under `server-data/`.
+ * The mock backend's storage layer: a handful of JSON documents, addressed by
+ * path through `FileStore`.
  *
- *   server-data/
- *     keys.json                        the key registry — one row per key
- *     templates.json                   the template registry — one row per template
- *     translations/<app>/<code>.json   one file per app per language
+ *   keys.json                        the key registry — one row per key
+ *   templates.json                   the template registry — one row per template
+ *   translations/<app>/<code>.json   one file per app per language
+ *   audit/<app>/<code>.json          who last wrote each of those values
+ *
+ * Where those documents actually live is the caller's business: real files
+ * under `server-data/` on the dev server, IndexedDB in a tab with no backend
+ * behind it. Nothing in this file knows which, and nothing in it imports
+ * `node:` anything — that is what lets the same mock serve a static deploy.
  *
  * A template is not a fourth kind of storage: its text lives in the same
  * per-app language files as everything else, keyed `<template>.<field>`, and
@@ -16,8 +22,8 @@
  * per app rather than pooled. An app with no keys has no folder yet.
  *
  * Seeded from `sample-data/locale/*.json` into `web/school` on first use, so
- * the sample export stays pristine and `npm run mock:reset` (or deleting the
- * folder) puts the demo back to where it started.
+ * the sample export stays pristine and `npm run mock:reset` (or the Reset
+ * button) puts the demo back to where it started.
  *
  * English is not special: `<app>/en.json` is a language file like any other,
  * and the registry holds no text at all. That is how a real schema would
@@ -28,16 +34,8 @@
  * the server and the browser cannot disagree about what "missing" means.
  */
 
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs"
-import { dirname, join } from "node:path"
-
 import type {
+  AuditLog,
   CoverageResponse,
   CreateKeyResponse,
   EntriesResponse,
@@ -47,43 +45,33 @@ import type {
   ReviewIssues,
   SaveTranslationsResponse,
   TemplatesResponse,
-} from "../src/lib/api_types.ts"
+} from "../lib/api_types.ts"
+import { safeEntryName } from "../lib/file_name.ts"
 import {
   groupKeyOf,
+  IMPORT_AUTHOR,
   isValidKey,
   languages,
   SOURCE_LANGUAGE,
   statusOf,
+  type AuditStamp,
   type LanguageCode,
   type LocaleBundle,
   type TranslationRow,
-} from "../src/lib/locale_data.ts"
-import { safeEntryName } from "../src/lib/file_name.ts"
+} from "../lib/locale_data.ts"
 import {
   entryOf,
   fieldOf,
   fieldsOf,
   templateKeyOf,
   type TemplateEntry,
-  type TemplateFieldId,
   type TemplateRecord,
-} from "../src/lib/template_data.ts"
-import { checkTranslation } from "../src/lib/validation.ts"
+} from "../lib/template_data.ts"
+import { checkTranslation } from "../lib/validation.ts"
+import type { FileStore, SeedSource } from "./file_store.ts"
 
 /** The app the sample export belongs to — see `src/config/target_profiles.ts`. */
 const SEED_TARGET = "web/school"
-
-/**
- * `sample-data/templates.json`, one of them: a registry row plus the text, so
- * the seed is one readable file per concern rather than a registry and twelve
- * bundles a human has to keep in step by hand.
- */
-type TemplateSeed = TemplateRecord & {
-  source: Partial<Record<TemplateFieldId, string>>
-  translations?: Partial<
-    Record<LanguageCode, Partial<Record<TemplateFieldId, string>>>
-  >
-}
 
 /** Groups shown per language on the dashboard. */
 const TOP_GROUPS = 5
@@ -100,61 +88,70 @@ export class HttpError extends Error {
 
 export type Store = ReturnType<typeof createStore>
 
-export function createStore(root: string) {
-  const dataDir = join(root, "server-data")
-  const translationsDir = join(dataDir, "translations")
-  const keysFile = join(dataDir, "keys.json")
-  const templatesFile = join(dataDir, "templates.json")
-  const seedDir = join(root, "sample-data", "locale")
-  const templateSeedFile = join(root, "sample-data", "templates.json")
+export function createStore(files: FileStore, seeds: SeedSource) {
+  const keysFile = "keys.json"
+  const templatesFile = "templates.json"
 
-  // Files are the source of truth, but parsing 13 × 200 KB on every request
-  // would make the workspace feel like a slideshow. Everything is cached and
-  // invalidated on write.
+  // The documents are the source of truth, but parsing 13 × 200 KB on every
+  // request would make the workspace feel like a slideshow. Everything is
+  // cached and invalidated on write.
   let keyCache: KeyRecord[] | null = null
   let templateCache: TemplateRecord[] | null = null
   const bundleCache = new Map<string, LocaleBundle>()
+  const auditCache = new Map<string, AuditLog>()
   let coverageCache: CoverageResponse | null = null
+  let seeding: Promise<void> | null = null
 
   const clearCaches = () => {
     keyCache = null
     templateCache = null
     bundleCache.clear()
+    auditCache.clear()
     coverageCache = null
   }
 
-  const readJson = <T>(file: string): T =>
-    JSON.parse(readFileSync(file, "utf8")) as T
-
-  const writeJson = (file: string, value: unknown) => {
-    mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8")
+  const readJson = <T>(file: string): T | null => {
+    const text = files.read(file)
+    return text === null ? null : (JSON.parse(text) as T)
   }
 
-  /** `web/school` + `vi` → `server-data/translations/web/school/vi.json`. */
+  const writeJson = (file: string, value: unknown) => {
+    files.write(file, `${JSON.stringify(value, null, 2)}\n`)
+  }
+
+  /** `web/school` + `vi` → `translations/web/school/vi.json`. */
   const bundleFile = (target: string, code: LanguageCode) =>
-    join(translationsDir, ...target.split("/"), `${code}.json`)
+    `translations/${target}/${code}.json`
+
+  /**
+   * The log that shadows it — `audit/web/school/vi.json`, keyed the same way.
+   *
+   * Beside the bundle rather than inside it: a bundle is a plain `key: text`
+   * document that gets exported and shipped as-is, and an audit trail has no
+   * business travelling with it.
+   */
+  const auditFile = (target: string, code: LanguageCode) =>
+    `audit/${target}/${code}.json`
 
   /** The same path as the UI shows it — forward slashes, relative to the repo. */
   const relativeBundlePath = (target: string, code: LanguageCode) =>
-    `server-data/translations/${target}/${code}.json`
+    `server-data/${bundleFile(target, code)}`
 
-  function seed() {
+  async function seed() {
     // Always from a clean slate, so a half-written or older layout cannot
     // survive into the new one.
-    rmSync(dataDir, { recursive: true, force: true })
+    files.clear()
+
+    const source: LocaleBundle = {}
 
     for (const language of languages) {
-      const from = join(seedDir, `${language.code}.json`)
-      writeJson(
-        bundleFile(SEED_TARGET, language.code),
-        existsSync(from) ? readJson<LocaleBundle>(from) : {}
-      )
+      const values = (await seeds.locale(language.code)) ?? {}
+      writeJson(bundleFile(SEED_TARGET, language.code), values)
+      if (language.code === SOURCE_LANGUAGE) {
+        Object.assign(source, values)
+      }
     }
 
-    const source = readJson<LocaleBundle>(
-      bundleFile(SEED_TARGET, SOURCE_LANGUAGE)
-    )
     const createdAt = new Date().toISOString()
 
     const records: KeyRecord[] = Object.keys(source).map((key) => ({
@@ -163,9 +160,10 @@ export function createStore(root: string) {
       target: SEED_TARGET,
       origin: "import",
       createdAt,
+      createdBy: IMPORT_AUTHOR,
     }))
 
-    writeJson(keysFile, [...records, ...seedTemplates()])
+    writeJson(keysFile, [...records, ...(await seedTemplates())])
   }
 
   /**
@@ -178,19 +176,20 @@ export function createStore(root: string) {
    * Returns the key records to add, rather than writing them, so the registry
    * is written once.
    */
-  function seedTemplates(): KeyRecord[] {
-    if (!existsSync(templateSeedFile)) {
+  async function seedTemplates(): Promise<KeyRecord[]> {
+    const seedRows = await seeds.templates()
+
+    if (!seedRows) {
       writeJson(templatesFile, [])
       return []
     }
 
-    const seeds = readJson<TemplateSeed[]>(templateSeedFile)
     const records: KeyRecord[] = []
     const registry: TemplateRecord[] = []
     // `${target}:${code}` → that file's contents, built up across templates.
     const bundles = new Map<string, LocaleBundle>()
 
-    for (const { source, translations, ...template } of seeds) {
+    for (const { source, translations, ...template } of seedRows) {
       registry.push(template)
 
       for (const field of fieldsOf(template.channel)) {
@@ -206,6 +205,9 @@ export function createStore(root: string) {
           target: template.target,
           origin: "import",
           createdAt: template.createdAt,
+          // The registry knows who wrote the message. Its seeded translations
+          // have no author of their own and fall back to the import.
+          createdBy: template.createdBy,
         })
 
         for (const language of languages) {
@@ -225,47 +227,100 @@ export function createStore(root: string) {
 
     for (const [id, values] of bundles) {
       const [target, code] = id.split(":")
-      writeJson(bundleFile(target, code as LanguageCode), values)
+      // The seed app's own files were just written above, so a template that
+      // belongs to it has to merge rather than replace.
+      const file = bundleFile(target, code as LanguageCode)
+      writeJson(file, { ...(readJson<LocaleBundle>(file) ?? {}), ...values })
     }
 
     writeJson(templatesFile, registry)
     return records
   }
 
-  function ensureSeeded() {
-    // The bundle check also re-seeds a `server-data` left by an older layout.
+  /**
+   * Seeds an empty store. Awaited once per request instead of from every
+   * accessor below, which is what keeps those accessors synchronous now that
+   * a seed can involve the network.
+   *
+   * The bundle check also re-seeds data left by an older layout.
+   */
+  function ready(): Promise<void> {
     if (
-      !existsSync(keysFile) ||
-      !existsSync(templatesFile) ||
-      !existsSync(bundleFile(SEED_TARGET, SOURCE_LANGUAGE))
+      files.read(keysFile) !== null &&
+      files.read(templatesFile) !== null &&
+      files.read(bundleFile(SEED_TARGET, SOURCE_LANGUAGE)) !== null &&
+      !isStale()
     ) {
-      seed()
-      clearCaches()
+      return Promise.resolve()
+    }
+
+    // Two requests in flight against a cold store must not both seed it.
+    seeding ??= seed()
+      .then(clearCaches)
+      .finally(() => {
+        seeding = null
+      })
+    return seeding
+  }
+
+  /**
+   * A registry written before the audit trail existed has no `createdBy`. It
+   * is working data seeded from `sample-data`, so re-seeding costs nothing
+   * and beats serving half a trail.
+   */
+  function isStale(): boolean {
+    try {
+      const [first] = readJson<KeyRecord[]>(keysFile) ?? []
+      return first !== undefined && first.createdBy === undefined
+    } catch {
+      return true
     }
   }
 
   function keyRecords(): KeyRecord[] {
-    ensureSeeded()
-    keyCache ??= readJson<KeyRecord[]>(keysFile)
+    keyCache ??= readJson<KeyRecord[]>(keysFile) ?? []
     return keyCache
   }
 
   function templateRecords(): TemplateRecord[] {
-    ensureSeeded()
-    templateCache ??= readJson<TemplateRecord[]>(templatesFile)
+    templateCache ??= readJson<TemplateRecord[]>(templatesFile) ?? []
     return templateCache
   }
 
   function bundle(target: string, code: LanguageCode): LocaleBundle {
-    ensureSeeded()
     const id = `${target}:${code}`
     let cached = bundleCache.get(id)
     if (!cached) {
-      const file = bundleFile(target, code)
-      cached = existsSync(file) ? readJson<LocaleBundle>(file) : {}
+      cached = readJson<LocaleBundle>(bundleFile(target, code)) ?? {}
       bundleCache.set(id, cached)
     }
     return cached
+  }
+
+  function auditLog(target: string, code: LanguageCode): AuditLog {
+    const id = `${target}:${code}`
+    let cached = auditCache.get(id)
+    if (!cached) {
+      cached = readJson<AuditLog>(auditFile(target, code)) ?? {}
+      auditCache.set(id, cached)
+    }
+    return cached
+  }
+
+  function writeAuditLog(target: string, code: LanguageCode, log: AuditLog) {
+    writeJson(auditFile(target, code), log)
+    auditCache.set(`${target}:${code}`, log)
+  }
+
+  /**
+   * What to show for a value nobody has written through this app: the text
+   * arrived with the key, so the key's own stamp is the honest answer.
+   */
+  function originStamp(record: KeyRecord): AuditStamp {
+    return {
+      by: record.origin === "manual" ? record.createdBy : IMPORT_AUTHOR,
+      at: record.createdAt,
+    }
   }
 
   function writeKeys(records: KeyRecord[]) {
@@ -320,10 +375,12 @@ export function createStore(root: string) {
       key: string
       source: string
       target: string
+      createdBy: string
     }): CreateKeyResponse {
       const key = input.key.trim()
       const source = input.source.trim()
       const target = input.target.trim()
+      const createdBy = input.createdBy.trim() || IMPORT_AUTHOR
 
       if (!key) {
         throw new HttpError(400, "Key is required.")
@@ -362,6 +419,7 @@ export function createStore(root: string) {
         target,
         origin: "manual",
         createdAt: new Date().toISOString(),
+        createdBy,
       }
       writeKeys([...keyRecords(), record])
 
@@ -375,6 +433,10 @@ export function createStore(root: string) {
         const values = { ...bundle(target, language.code) }
         delete values[key]
         writeBundle(target, language.code, values)
+
+        const log = { ...auditLog(target, language.code) }
+        delete log[key]
+        writeAuditLog(target, language.code, log)
       }
 
       writeKeys(
@@ -390,18 +452,25 @@ export function createStore(root: string) {
       const language = languageOf(code)
       const source = bundle(target, SOURCE_LANGUAGE)
       const values = bundle(target, language)
+      const log = auditLog(target, language)
 
       const entries = keyRecords()
         .filter((record) => record.target === target)
         .map((record): TranslationRow => {
           const sourceText = source[record.key] ?? ""
+          const value = values[record.key] ?? ""
           return {
             key: record.key,
             group: record.group,
             source: sourceText,
-            target: values[record.key] ?? "",
+            target: value,
             status: statusOf(sourceText, values[record.key], language),
             origin: record.origin,
+            created: { by: record.createdBy, at: record.createdAt },
+            // Nothing logged and nothing in the field: nobody has written a
+            // value, so the row says so rather than inventing an editor.
+            updated:
+              log[record.key] ?? (value ? originStamp(record) : undefined),
           }
         })
 
@@ -457,20 +526,40 @@ export function createStore(root: string) {
       }
     },
 
+    /**
+     * `by` is the audit trail's author. It comes off the request because the
+     * mock has no session to read it from; a real service takes it from the
+     * token and ignores whatever the browser claimed — an audit trail the
+     * client can forge is not one. See `src/config/current_user.ts`.
+     */
     saveTranslations(
       target: string,
       code: string,
-      values: Record<string, string>
+      values: Record<string, string>,
+      by: string
     ): SaveTranslationsResponse {
       const language = languageOf(code)
-      const saved = Object.keys(values).length
+      const keys = Object.keys(values)
+      const at = new Date().toISOString()
 
       writeBundle(target, language, {
         ...bundle(target, language),
         ...values,
       })
 
-      return { saved, file: relativeBundlePath(target, language) }
+      const log = { ...auditLog(target, language) }
+      for (const key of keys) {
+        // Emptying a value puts the row back to untranslated, so its stamp
+        // goes with it rather than reading as a translation somebody made.
+        if (values[key] === "") {
+          delete log[key]
+        } else {
+          log[key] = { by, at }
+        }
+      }
+      writeAuditLog(target, language, log)
+
+      return { saved: keys.length, file: relativeBundlePath(target, language) }
     },
 
     /* ---------------------------------------------------------------- export */
@@ -653,9 +742,15 @@ export function createStore(root: string) {
 
     /* ----------------------------------------------------------------- admin */
 
+    /**
+     * Awaited at the top of every request, so a cold store seeds itself before
+     * the first read rather than in the middle of one.
+     */
+    ready,
+
     /** Throws the working data away and re-seeds from `sample-data`. */
-    reset() {
-      seed()
+    async reset() {
+      await seed()
       clearCaches()
     },
   }

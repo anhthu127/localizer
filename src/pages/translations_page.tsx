@@ -11,7 +11,10 @@ import {
 } from "@/components/translations/group_filter"
 import { ExportDialog } from "@/components/translations/export_dialog"
 import { TargetProfileCard } from "@/components/translations/target_profile_card"
-import { TranslationRow } from "@/components/translations/translation_row"
+import {
+  ROW_GRID,
+  TranslationRow,
+} from "@/components/translations/translation_row"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,6 +38,7 @@ import {
   type TranslationRow as Row,
   type TranslationStatus,
 } from "@/lib/locale_data"
+import { cn } from "@/lib/utils"
 import { checkTranslation } from "@/lib/validation"
 
 type StatusFilter = TranslationStatus | "all" | "issues" | "new"
@@ -105,6 +109,8 @@ export function TranslationsPage() {
     language
   )
   const isRtl = languages.find((item) => item.code === language)?.rtl ?? false
+  const languageName =
+    languages.find((item) => item.code === language)?.name ?? language
   const hasKeys = rows.length > 0
 
   const groupOptions = useMemo(() => groupOptionsOf(rows), [rows])
@@ -384,39 +390,54 @@ export function TranslationsPage() {
       )}
 
       {!isLoading && !error && hasKeys && (
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
+        <>
+          {/* The list is virtualized, so the header cannot be a table header —
+              it is the same grid as the row, sitting above the scroller. */}
           <div
-            className="relative w-full"
-            style={{ height: `${virtualizer.getTotalSize()}px` }}
+            className={cn(
+              ROW_GRID,
+              "text-muted-foreground bg-muted/30 items-center gap-3 border-b px-4 py-1.5 text-[11px] tracking-wide uppercase"
+            )}
           >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const row = filtered[virtualRow.index]
-              const value = edits[row.key] ?? row.target
-
-              return (
-                <div
-                  key={row.key}
-                  ref={virtualizer.measureElement}
-                  data-index={virtualRow.index}
-                  className="absolute top-0 left-0 w-full"
-                  style={{ transform: `translateY(${virtualRow.start}px)` }}
-                >
-                  <TranslationRow
-                    row={row}
-                    value={value}
-                    isDirty={row.key in edits}
-                    isNew={row.origin === "manual"}
-                    language={language}
-                    onDelete={handleDelete}
-                    profile={profile}
-                    rtl={isRtl}
-                    onChange={handleChange}
-                  />
-                </div>
-              )
-            })}
+            <span>Key and English</span>
+            <span>{languageName}</span>
+            <span className="hidden xl:block">Audit</span>
           </div>
-        </div>
+
+          <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
+            <div
+              className="relative w-full"
+              style={{ height: `${virtualizer.getTotalSize()}px` }}
+            >
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const row = filtered[virtualRow.index]
+                const value = edits[row.key] ?? row.target
+
+                return (
+                  <div
+                    key={row.key}
+                    ref={virtualizer.measureElement}
+                    data-index={virtualRow.index}
+                    className="absolute top-0 left-0 w-full"
+                    style={{ transform: `translateY(${virtualRow.start}px)` }}
+                  >
+                    <TranslationRow
+                      row={row}
+                      value={value}
+                      isDirty={row.key in edits}
+                      isNew={row.origin === "manual"}
+                      language={language}
+                      onDelete={handleDelete}
+                      profile={profile}
+                      rtl={isRtl}
+                      onChange={handleChange}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </>
       )}
 
       {dirtyKeys.length > 0 && (

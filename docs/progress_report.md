@@ -363,3 +363,80 @@ Related: Vite's dev server resets any request whose URL contains `../../`, befor
 - Names: an empty entry name falls back to `<code>.json`, `../../evil.json` lands as `evil.json`, two entries called `same.json` / `SAME.json` are refused with 400, `school.zip` → `school`, `../../etc/pa:sswd.zip` → `etcpasswd`, and `Bảng dịch` survives the round trip with the archive contents intact.
 - Errors: no files → 400, no target → 400, unknown language → 404, an app with no keys → 404.
 - **Not verified:** still not clicked through in a browser.
+
+---
+
+## 12. The audit trail, and a copy button that copied nothing
+
+### Who added the key, who last wrote the value
+
+The workspace could say a string was wrong but not who to ask about it. Two
+stamps now travel with every row and show in a third column:
+
+- **Created by / Created at** — who put the key in the registry, and when. The
+  same in every language, so it lives on the key record (`KeyRecord.createdBy`).
+- **Updated by / Updated at** — who last saved *this language's* value, and
+  when. Per language, so it lives in a log beside the bundle:
+  `audit/<app>/<code>.json`, keyed the same way the bundle is.
+
+Four labelled facts rather than two compact stamps: a reviewer reads down the
+label column looking for one of them, and `Updated at` says what it is without
+having to be learned first.
+
+**Beside the bundle, not inside it.** A bundle is a plain `key: text` document
+that gets exported and shipped into an application; an audit trail has no
+business travelling with it. Keeping the log in its own document also means the
+export, the coverage count and `statusOf` needed no changes at all.
+
+**Imported text is stamped with the import, not left blank.** The sample
+bundles arrived with 2,038 Vietnamese translations that predate any trail.
+Showing nothing for them would read as "nobody has touched this", which is a
+different answer from "we have no record". A row with a value and no logged
+stamp falls back to the key's own — `Bundle import` for imported keys, the
+creator's name for keys added here. A row with no value shows nothing, because
+nothing has happened to it yet.
+
+**Emptying a value drops its stamp.** The row is back to untranslated, and a
+stamp on it would read as a translation somebody made.
+
+**Who is saving.** There is no sign-in, so `src/config/current_user.ts` is a
+placeholder that `lib/api.ts` attaches to every write — screens do not carry
+it. The mock believes what it is sent and records `Unknown` when nothing is.
+A real service takes the author from the session and ignores the field: an
+audit trail the client can forge is not one. That is the one line to delete
+when auth arrives.
+
+**Existing `server-data` re-seeds itself.** A registry written before this has
+no `createdBy`, so `ready()` treats it as stale and re-seeds from
+`sample-data` — the same thing `npm run mock:reset` does, on working data
+that is meant to be disposable.
+
+### The copy button
+
+The button under the copy icon did not copy. It pasted the English *into* the
+translation field — useful, and the reason it survived this long, but not what
+a copy icon promises, so it read as broken to anyone who clicked it expecting
+the clipboard.
+
+Both jobs are real, so there are now two buttons in both places that had one
+(the workspace row and the template field editor): **Copy** puts the English on
+the clipboard, **Paste** drops it into the field as a starting point.
+
+`lib/clipboard.ts` is the copy itself, and it does not only call
+`navigator.clipboard`: that API exists only in a secure context, so opening the
+dev server on a LAN address to read a translation on a phone would have made
+the fixed button fail silently in exactly the same way. It falls back to the
+old textarea trick, returns whether the text made it, and the caller toasts
+either way.
+
+### Verification
+
+- `npm run build` (tsc + vite) — passes. `npm run lint` — 0 errors, 7 warnings,
+  all pre-existing.
+- A smoke test drove the mock router against a throwaway data root: seeded rows
+  carry both stamps; an empty value carries none; a save names the editor and
+  writes `audit/web/school/vi.json`; clearing a value clears its stamp; a key
+  added through the API names its author, with its English credited to them and
+  its empty Vietnamese credited to nobody; a save with no author recorded
+  `Unknown`; deleting a key removed its stamp from the log.
+- **Not verified:** still not clicked through in a browser.

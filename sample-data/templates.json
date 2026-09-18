@@ -6,7 +6,7 @@
     "category": "coach",
     "target": "others/email",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Mai Nguyen",
+    "createdBy": "Anna bel",
     "createdAt": "2026-02-11T03:20:00.000Z",
     "source": {
       "subject": "You are invited to coach at {schoolName}",
@@ -39,7 +39,7 @@
     "category": "teacher",
     "target": "others/email",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Mai Nguyen",
+    "createdBy": "Anna bel",
     "createdAt": "2026-02-11T03:26:00.000Z",
     "source": {
       "subject": "Join {className} on {appName}",
@@ -145,7 +145,7 @@
     "category": "teacher",
     "target": "others/email",
     "owner": { "kind": "web", "app": "curriculum" },
-    "createdBy": "Ngoc Tran",
+    "createdBy": "kim jennie",
     "createdAt": "2026-04-07T02:15:00.000Z",
     "source": {
       "subject": "{unitName} plan is due {dueDate}",
@@ -171,7 +171,7 @@
     "category": "coach",
     "target": "others/email",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Hung Dang",
+    "createdBy": "hurry kang",
     "createdAt": "2026-04-22T06:48:00.000Z",
     "source": {
       "subject": "Visitation at {campusName} on {date}",
@@ -251,7 +251,7 @@
     "category": "admin",
     "target": "others/email",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Hung Dang",
+    "createdBy": "hurry kang",
     "createdAt": "2026-06-09T08:14:00.000Z",
     "source": {
       "subject": "{schoolName} licenses expire in {days} days",
@@ -291,7 +291,7 @@
     "category": "teacher",
     "target": "others/sms",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Mai Nguyen",
+    "createdBy": "Anna bel",
     "createdAt": "2026-02-11T03:31:00.000Z",
     "source": {
       "message": "{coachName} invited you to teach {className}. Set up your account: {link} Code: {code}"
@@ -309,7 +309,7 @@
     "category": "parent",
     "target": "others/sms",
     "owner": { "kind": "app", "app": "parent" },
-    "createdBy": "Ngoc Tran",
+    "createdBy": "kim jennie",
     "createdAt": "2026-04-15T01:55:00.000Z",
     "source": {
       "message": "Reminder: {className} starts {time} tomorrow at {campusName}."
@@ -330,7 +330,7 @@
     "category": "parent",
     "target": "others/sms",
     "owner": { "kind": "app", "app": "parent" },
-    "createdBy": "Ngoc Tran",
+    "createdBy": "kim jennie",
     "createdAt": "2026-04-15T02:03:00.000Z",
     "source": {
       "message": "{studentName} was marked absent from {className} today. Reply or open {appName} to tell {teacherName} why."
@@ -406,7 +406,7 @@
     "category": "parent",
     "target": "others/notification",
     "owner": { "kind": "app", "app": "parent" },
-    "createdBy": "Ngoc Tran",
+    "createdBy": "kim jennie",
     "createdAt": "2026-05-18T04:10:00.000Z",
     "source": {
       "title": "{teacherName} left a note",
@@ -426,7 +426,7 @@
     "category": "coach",
     "target": "others/notification",
     "owner": { "kind": "web", "app": "school" },
-    "createdBy": "Hung Dang",
+    "createdBy": "hurry kang",
     "createdAt": "2026-04-22T06:55:00.000Z",
     "source": {
       "title": "Visitation tomorrow at {time}",
@@ -446,7 +446,7 @@
     "category": "parent",
     "target": "others/notification",
     "owner": { "kind": "app", "app": "baby" },
-    "createdBy": "Mai Nguyen",
+    "createdBy": "Anna bel",
     "createdAt": "2026-06-01T03:25:00.000Z",
     "source": {
       "title": "A new story for {firstName}",

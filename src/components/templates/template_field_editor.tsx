@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { AlertTriangle, Code2, Copy, Info } from "lucide-react"
+import {
+  AlertTriangle,
+  ClipboardPaste,
+  Code2,
+  Copy,
+  Info,
+} from "lucide-react"
+import { toast } from "sonner"
 
 import { RichTextEditor } from "@/components/templates/rich_text_editor"
 import { Badge } from "@/components/ui/badge"
@@ -7,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { TargetProfile } from "@/config/target_profiles"
+import { copyText } from "@/lib/clipboard"
 import type { LanguageCode } from "@/lib/locale_data"
 import type {
   TemplateChannel,
@@ -65,6 +73,16 @@ export function TemplateFieldEditor({
   })
   const hasError = issues.some((issue) => issue.level === "error")
 
+  const handleCopy = async () => {
+    if (await copyText(value.source)) {
+      toast.success(`${field.label} copied to the clipboard`)
+    } else {
+      toast.error("Could not copy", {
+        description: "The browser blocked clipboard access for this page.",
+      })
+    }
+  }
+
   const shared = {
     value: current,
     dir: rtl ? ("rtl" as const) : undefined,
@@ -107,14 +125,28 @@ export function TemplateFieldEditor({
               HTML
             </Button>
           )}
+          {/* Copy takes the English away, paste drops it in as a starting
+              point — one button doing the second under the first one's icon is
+              what made the copy button look broken. */}
           <Button
             variant="ghost"
             size="icon"
             className="size-6"
-            aria-label={`Copy the English ${field.label.toLowerCase()}`}
-            onClick={() => onChange(field.id, value.source)}
+            aria-label={`Copy the English ${field.label.toLowerCase()} to the clipboard`}
+            title="Copy to clipboard"
+            onClick={handleCopy}
           >
             <Copy className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            aria-label={`Paste the English ${field.label.toLowerCase()} into the translation`}
+            title="Paste into the translation"
+            onClick={() => onChange(field.id, value.source)}
+          >
+            <ClipboardPaste className="size-3.5" />
           </Button>
         </div>
       </div>
