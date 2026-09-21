@@ -225,13 +225,24 @@ type CheckOptions = {
   format?: "text" | "html"
 }
 
+/**
+ * Shortest English source worth reviewing.
+ *
+ * Below this, a row is a label, a button or a single word: the checks fire
+ * often and say little — a two-word string in Thai carries no Latin letters,
+ * and a short one legitimately runs several times the English length — so the
+ * review queue fills with rows a translator cannot act on. Review starts once
+ * the English is long enough for the checks to mean something.
+ */
+const MIN_SOURCE_LENGTH = 50
+
 /** Ordered most severe first, so a row can show the worst one inline. */
 export function checkTranslation(
   source: string,
   target: string,
   { language, lengthBudget, maxLength, format = "text" }: CheckOptions
 ): RowIssue[] {
-  if (!target) {
+  if (!target || source.length <= MIN_SOURCE_LENGTH) {
     return []
   }
 
@@ -286,7 +297,7 @@ export function checkTranslation(
     })
   }
 
-  if (source.length >= 4 && target.length > source.length * lengthBudget) {
+  if (target.length > source.length * lengthBudget) {
     const ratio = (target.length / source.length).toFixed(1)
     issues.push({
       id: "length",
