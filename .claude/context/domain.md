@@ -18,9 +18,15 @@ that, not its section, decides which screen renders it.
 
 ## Key
 
-A dotted identifier: `nav.home`, `invitation-registernew.policy.accept`.
-Lowercase, `/` and `-` allowed, at least one dot required. The format is
-`KEY_PATTERN` / `isValidKey` in `lib/locale_data.ts` — the one definition.
+A dotted identifier: `nav.home`, `invitation-registernew.policy.accept`,
+`common.link.repOnline`. Letters, digits, `_`, `/` and `-`; at least one dot
+required, because the first segment is the group. The format is `KEY_PATTERN` /
+`isValidKey` in `lib/locale_data.ts` — the one definition.
+
+**Case is not a rule.** 434 of the 3,339 seeded keys are camelCase, so a
+lowercase-only pattern would have had the app refusing to create or import a
+name 13% of its own data already uses — and `seed()` does not validate, so
+those keys were in the registry either way.
 
 **Group** is the first dot-segment (`groupKeyOf`), denormalised onto each key
 record so a list can group without parsing. It is what the group filter filters
@@ -35,7 +41,7 @@ go. `lib/api_types.ts` names the two answers, and `POST /api/keys/delete` takes
 one of them with a list of keys — a row's trash button sends a list of one.
 
 - **`language`** — the values leave one language file and its audit log. The
-  keys stay in `keys.json`, so they read as *missing* in that language and keep
+  keys stay in `keys.json`, so they read as _missing_ in that language and keep
   their text in the other twelve. A translator's cleanup.
 - **`all`** — the keys leave `keys.json` and every language file of the app.
   The string is retired from the product.
@@ -51,7 +57,7 @@ On disk: `server-data/translations/<target>/<code>.json`.
 **English is not special.** `en.json` is a language file like any other, and the
 key registry holds no text at all. Adding a key writes the English string to
 `en.json`, an empty string to the other twelve files, and one row to
-`keys.json` — which is why a new key is *missing* in every language at once, in
+`keys.json` — which is why a new key is _missing_ in every language at once, in
 that target only.
 
 ## Language
@@ -65,26 +71,26 @@ will again; when it does, that constant becomes a fetch and nothing else moves.
 
 Two values, and one definition, in `lib/locale_data.ts`:
 
-- **missing** — the key is absent from the target bundle, *or* its value is
-  empty, *or* its value is a verbatim copy of the English source. The third case
+- **missing** — the key is absent from the target bundle, _or_ its value is
+  empty, _or_ its value is a verbatim copy of the English source. The third case
   counts because bundles ship with English as the fallback, so a copy is an
   untranslated string wearing the source's clothes. It is skipped when the
-  target language *is* English.
-- **translated** — anything else. Whether the value is any *good* is
+  target language _is_ English.
+- **translated** — anything else. Whether the value is any _good_ is
   `lib/validation.ts`, not this.
 
 `src/mock/store.ts` imports `statusOf`; it does not reimplement it.
 
 ## Issues — `checkTranslation`
 
-Per-row checks over a *translated* value, in `lib/validation.ts`, each an
+Per-row checks over a _translated_ value, in `lib/validation.ts`, each an
 `error` or a `warning`: placeholder drift (`{firstName}` becoming
 `{studentName}`), dominant-script mismatch (a bundle holding the wrong language
 entirely), whitespace, unbalanced HTML in a mail body, and links that no longer
 match the English ones. Checks are skipped for very short English sources, where
 they fire often and say little.
 
-"Needs review" on the dashboard means *missing, or translated and flagged*.
+"Needs review" on the dashboard means _missing, or translated and flagged_.
 
 ## Audit
 
@@ -113,9 +119,9 @@ and coverage all work on it unchanged, and the translate dialog saves through
 - **Category** and **owner** are labels on the template, not on the keys.
 
 The mail body is rich text. Both the editor's output and the preview's input go
-through the whitelist in `lib/template_preview.ts` — the editor *unwraps* what
+through the whitelist in `lib/template_preview.ts` — the editor _unwraps_ what
 it does not know, because that markup came from the browser; the preview
-*escapes* it, because that markup came from a bundle and a translator should see
+_escapes_ it, because that markup came from a bundle and a translator should see
 the `<script>` they are about to ship. Nothing else is handed to
 `dangerouslySetInnerHTML`.
 
@@ -124,8 +130,17 @@ the `<script>` they are about to ship. Nothing else is handed to
 **Import** takes one whole language file for one target, in one of two modes
 (`ImportMode`): `replace` — the language becomes the file, so an omitted key
 loses its value; `merge` — an omitted key keeps what it had, which is what a
-partial file from an agency usually means. The wizard previews the diff
-(`lib/bundle_diff.ts`) before it applies.
+partial file from an agency usually means. `merge` is the default. The wizard
+previews the diff (`lib/bundle_diff.ts`) before it applies.
+
+A `replace` also **retires** keys, and that part is the wizard's, not the
+route's. `PUT /api/import/:lang` never un-registers anything, because one
+language file cannot say which keys an app has. A whole delivery can: once
+every file has landed, `pages/import_page.tsx` deletes the keys that _no_ file
+in the batch carried, through `POST /api/keys/delete` with `scope: "all"` —
+see [Delete scope](#delete-scope--deletescope). Per file it would be wrong:
+`vi.json` omitting a key would unregister it, and the `ja.json` behind it would
+register it again as new, with its English gone.
 
 **Export** is a POST, because the caller names every file in the archive: the
 receiving application decides what its locale files are called, so `zh-Hans`

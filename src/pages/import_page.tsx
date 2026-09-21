@@ -1,64 +1,78 @@
-import { useMemo, useRef, useState, type DragEvent, type ReactNode } from "react"
-import { Link, useSearchParams } from "react-router"
-import { AlertTriangle, ArrowLeft, FileJson, Upload, X } from "lucide-react"
-import { toast } from "sonner"
+import { AlertTriangle, ArrowLeft, FileJson, Upload, X } from "lucide-react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactNode,
+} from "react";
+import { Link, useSearchParams } from "react-router";
+import { toast } from "sonner";
 
-import { BundleDiffView } from "@/components/translations/bundle_diff_view"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { BundleDiffView } from "@/components/translations/bundle_diff_view";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import { navLeaves } from "@/config/nav_items"
-import { useTargetBundles } from "@/hooks/use_target_bundles"
-import { importBundle, messageOf } from "@/lib/api"
-import type { ImportMode, ImportResponse } from "@/lib/api_types"
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { navLeaves } from "@/config/nav_items";
+import { profileOf } from "@/config/target_profiles";
+import { useTargetBundles } from "@/hooks/use_target_bundles";
+import { deleteKeys, importBundle, messageOf } from "@/lib/api";
+import type { ImportMode, ImportResponse } from "@/lib/api_types";
 import {
   BundleFileError,
   changeCount,
   diffBundle,
   parseBundleFile,
   type BundleDiff,
-} from "@/lib/bundle_diff"
+} from "@/lib/bundle_diff";
 import {
   languages,
   SOURCE_LANGUAGE,
   type LanguageCode,
   type LocaleBundle,
-} from "@/lib/locale_data"
-import { profileOf } from "@/config/target_profiles"
-import { cn } from "@/lib/utils"
+} from "@/lib/locale_data";
+import { cn } from "@/lib/utils";
 
 /** A file that parsed, waiting for a language and a reviewer. */
 type StagedFile = {
-  id: string
-  name: string
-  values: LocaleBundle
+  id: string;
+  name: string;
+  values: LocaleBundle;
   /** Null until somebody says which language it is — never guessed silently. */
-  language: LanguageCode | null
-}
+  language: LanguageCode | null;
+};
 
 /** What one file's write came back as. */
 type ImportResult = {
-  id: string
-  name: string
-  language: LanguageCode
-  response: ImportResponse | null
-  error: string | null
-}
+  id: string;
+  name: string;
+  language: LanguageCode;
+  response: ImportResponse | null;
+  error: string | null;
+};
+
+/** A finished delivery: every file's write, and the retire that followed. */
+type ImportOutcome = {
+  files: ImportResult[];
+  /** Keys no file carried, dropped from the registry — 0 unless replacing. */
+  retired: number;
+  /** Why the retire did not happen, when it was meant to. */
+  retireError: string | null;
+};
 
 const targetOptions = navLeaves.map(({ section, leaf }) => ({
   path: `${section.id}/${leaf.id}`,
   label: `${section.title} · ${leaf.title}`,
-}))
-
+}));
 /**
  * Route: `/import` — the import wizard, `?target=web/school` optional.
  *
@@ -79,57 +93,59 @@ const targetOptions = navLeaves.map(({ section, leaf }) => ({
  * §3.7.
  */
 export function ImportPage() {
-  const [params, setParams] = useSearchParams()
-  const target = params.get("target") ?? ""
+  const [params, setParams] = useSearchParams();
+  const target = params.get("target") ?? "";
 
-  const [files, setFiles] = useState<StagedFile[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [mode, setMode] = useState<ImportMode>("replace")
-  const [isDragging, setIsDragging] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [results, setResults] = useState<ImportResult[] | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [files, setFiles] = useState<StagedFile[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Off by default: a replace now retires keys from the app entirely, which is
+  // a decision about the product rather than about a translation delivery.
+  const [mode, setMode] = useState<ImportMode>("merge");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [results, setResults] = useState<ImportOutcome | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const [sectionId, leafId] = target.split("/")
-  const profile = profileOf(sectionId, leafId)
+  const [sectionId, leafId] = target.split("/");
+  const profile = profileOf(sectionId, leafId);
   const targetLabel =
-    targetOptions.find((option) => option.path === target)?.label ?? target
+    targetOptions.find((option) => option.path === target)?.label ?? target;
 
   // Base UI hands back null when a select is cleared; there is no "no app".
   const setTarget = (value: string | null) => {
     if (!value) {
-      return
+      return;
     }
-    const next = new URLSearchParams(params)
-    next.set("target", value)
-    setParams(next, { replace: true })
+    const next = new URLSearchParams(params);
+    next.set("target", value);
+    setParams(next, { replace: true });
     // The files stay — the same delivery aimed at a different app is a real
     // correction — but everything read about the old app is now wrong.
-    setResults(null)
-  }
+    setResults(null);
+  };
 
   const codes = useMemo(
     () => [
       ...new Set(
         files
           .map((file) => file.language)
-          .filter((code): code is LanguageCode => code !== null)
+          .filter((code): code is LanguageCode => code !== null),
       ),
     ],
-    [files]
-  )
+    [files],
+  );
 
-  const bundles = useTargetBundles(target, codes)
+  const bundles = useTargetBundles(target, codes);
 
   const diffs = useMemo(() => {
-    const out = new Map<string, BundleDiff>()
+    const out = new Map<string, BundleDiff>();
 
     for (const file of files) {
       // `undefined` is "not read yet"; `[]` is an app with no keys, which a
       // file can now fill on its own — every key in it reads as new.
-      const rows = file.language ? bundles.rows.get(file.language) : undefined
+      const rows = file.language ? bundles.rows.get(file.language) : undefined;
       if (!file.language || !rows) {
-        continue
+        continue;
       }
       out.set(
         file.id,
@@ -138,37 +154,64 @@ export function ImportPage() {
           language: file.language,
           lengthBudget: profile.lengthBudget,
           maxLength: profile.maxLength,
-        })
-      )
+        }),
+      );
     }
 
-    return out
-  }, [files, bundles.rows, mode, profile.lengthBudget, profile.maxLength])
+    return out;
+  }, [files, bundles.rows, mode, profile.lengthBudget, profile.maxLength]);
 
   const totalChanges = useMemo(
     () =>
       [...diffs.values()].reduce(
         (sum, diff) => sum + changeCount(diff.counts),
-        0
+        0,
       ),
-    [diffs]
-  )
+    [diffs],
+  );
 
   /** Two files aimed at one language would write the same file twice. */
   const duplicated = useMemo(() => {
-    const seen = new Map<LanguageCode, number>()
+    const seen = new Map<LanguageCode, number>();
     for (const file of files) {
       if (file.language) {
-        seen.set(file.language, (seen.get(file.language) ?? 0) + 1)
+        seen.set(file.language, (seen.get(file.language) ?? 0) + 1);
       }
     }
     return new Set(
-      [...seen].filter(([, times]) => times > 1).map(([code]) => code)
-    )
-  }, [files])
+      [...seen].filter(([, times]) => times > 1).map(([code]) => code),
+    );
+  }, [files]);
 
-  const unassigned = files.filter((file) => file.language === null).length
-  const selected = files.find((file) => file.id === selectedId) ?? files[0] ?? null
+  /**
+   * The keys a true replace retires: the ones no file in the delivery carries.
+   *
+   * Computed across the batch rather than per file, because a file is one
+   * language and the delivery is the statement about the app's key list. Were
+   * it per file, importing `vi.json` without a key would unregister it and the
+   * `ja.json` behind it in the same delivery would register it again, English
+   * and all, as something new.
+   *
+   * Any one language's rows will do for the registry: `/entries` answers per
+   * key record, not per value, so every language sees the same key list.
+   */
+  const retired = useMemo(() => {
+    if (mode !== "replace") {
+      return [];
+    }
+
+    const [registry] = [...bundles.rows.values()];
+    if (!registry) {
+      return [];
+    }
+
+    const carried = new Set(files.flatMap((file) => Object.keys(file.values)));
+    return registry.map((row) => row.key).filter((key) => !carried.has(key));
+  }, [mode, bundles.rows, files]);
+
+  const unassigned = files.filter((file) => file.language === null).length;
+  const selected =
+    files.find((file) => file.id === selectedId) ?? files[0] ?? null;
 
   const blocker = whyNot({
     target,
@@ -178,11 +221,11 @@ export function ImportPage() {
     isLoading: bundles.isLoading,
     error: bundles.error,
     totalChanges,
-  })
+  });
 
   const readFiles = async (list: FileList | File[]) => {
-    const added: StagedFile[] = []
-    const failed: string[] = []
+    const added: StagedFile[] = [];
+    const failed: string[] = [];
 
     for (const file of Array.from(list)) {
       try {
@@ -191,45 +234,45 @@ export function ImportPage() {
           name: file.name,
           values: parseBundleFile(await file.text()),
           language: languageFromName(file.name),
-        })
+        });
       } catch (cause: unknown) {
         failed.push(
           `${file.name} — ${
             cause instanceof BundleFileError ? cause.message : messageOf(cause)
-          }`
-        )
+          }`,
+        );
       }
     }
 
     if (added.length > 0) {
-      setFiles((current) => [...current, ...added])
-      setSelectedId((current) => current ?? added[0].id)
-      setResults(null)
+      setFiles((current) => [...current, ...added]);
+      setSelectedId((current) => current ?? added[0].id);
+      setResults(null);
     }
 
     if (failed.length > 0) {
       toast.error(
         `${failed.length} ${failed.length === 1 ? "file" : "files"} could not be read`,
-        { description: failed.join("\n") }
-      )
+        { description: failed.join("\n") },
+      );
     }
-  }
+  };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setIsDragging(false)
+    event.preventDefault();
+    setIsDragging(false);
     if (event.dataTransfer.files.length > 0) {
-      void readFiles(event.dataTransfer.files)
+      void readFiles(event.dataTransfer.files);
     }
-  }
+  };
 
   const removeFile = (id: string) =>
-    setFiles((current) => current.filter((file) => file.id !== id))
+    setFiles((current) => current.filter((file) => file.id !== id));
 
   const assign = (id: string, language: LanguageCode) =>
     setFiles((current) =>
-      current.map((file) => (file.id === id ? { ...file, language } : file))
-    )
+      current.map((file) => (file.id === id ? { ...file, language } : file)),
+    );
 
   /**
    * One request per file, in order and not in parallel: they write into the
@@ -238,24 +281,29 @@ export function ImportPage() {
    */
   const handleImport = async () => {
     if (blocker) {
-      return
+      return;
     }
 
-    setIsImporting(true)
-    const done: ImportResult[] = []
+    setIsImporting(true);
+    const done: ImportResult[] = [];
 
     for (const file of files) {
       if (!file.language) {
-        continue
+        continue;
       }
       try {
         done.push({
           id: file.id,
           name: file.name,
           language: file.language,
-          response: await importBundle(target, file.language, file.values, mode),
+          response: await importBundle(
+            target,
+            file.language,
+            file.values,
+            mode,
+          ),
           error: null,
-        })
+        });
       } catch (cause: unknown) {
         done.push({
           id: file.id,
@@ -263,24 +311,53 @@ export function ImportPage() {
           language: file.language,
           response: null,
           error: messageOf(cause),
-        })
+        });
       }
     }
 
-    setResults(done)
-    setIsImporting(false)
+    const failed = done.filter((result) => result.error).length;
 
-    const failed = done.filter((result) => result.error).length
-    if (failed === 0) {
-      toast.success(
-        `Imported ${done.length} ${done.length === 1 ? "file" : "files"} into ${targetLabel}`
-      )
-    } else {
-      toast.error(
-        `${failed} of ${done.length} could not be written — see the results below`
-      )
+    // Only once every file landed. A half-applied delivery says nothing about
+    // which keys the app still has, and retiring on the strength of it would
+    // delete keys the file that failed was carrying.
+    let retiredCount = 0;
+    let retireError: string | null = null;
+
+    if (retired.length > 0 && failed === 0) {
+      try {
+        const result = await deleteKeys({
+          target,
+          keys: retired,
+          scope: "all",
+        });
+        retiredCount = result.deleted;
+      } catch (cause: unknown) {
+        retireError = messageOf(cause);
+      }
     }
-  }
+
+    setResults({ files: done, retired: retiredCount, retireError });
+    setIsImporting(false);
+
+    if (failed > 0) {
+      toast.error(
+        `${failed} of ${done.length} could not be written — see the results below`,
+      );
+    } else if (retireError) {
+      toast.error("Imported, but the keys left out could not be retired", {
+        description: retireError,
+      });
+    } else {
+      toast.success(
+        `Imported ${done.length} ${done.length === 1 ? "file" : "files"} into ${targetLabel}`,
+        retiredCount > 0
+          ? {
+              description: `${retiredCount} ${retiredCount === 1 ? "key" : "keys"} no file carried were removed from the app.`,
+            }
+          : undefined,
+      );
+    }
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -336,24 +413,24 @@ export function ImportPage() {
             className="hidden"
             onChange={(event) => {
               if (event.target.files && event.target.files.length > 0) {
-                void readFiles(event.target.files)
+                void readFiles(event.target.files);
               }
               // Cleared so choosing the same file twice still fires a change.
-              event.target.value = ""
+              event.target.value = "";
             }}
           />
 
           <div
             onDragOver={(event) => {
-              event.preventDefault()
-              setIsDragging(true)
+              event.preventDefault();
+              setIsDragging(true);
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             className={cn(
               "flex flex-col items-center gap-2 rounded-lg border border-dashed text-center transition-colors",
               files.length > 0 ? "px-6 py-5" : "px-6 py-10",
-              isDragging && "border-primary bg-accent/40"
+              isDragging && "border-primary bg-accent/40",
             )}
           >
             <Upload className="text-muted-foreground size-6" />
@@ -432,12 +509,35 @@ export function ImportPage() {
               Clear the keys these files leave out
               <span className="text-muted-foreground">
                 {" "}
-                — a true replace, applied to every file below. Untick it when
-                the delivery is partial and the keys it omits should keep what
-                they already have.
+                — a true replace, applied to every file below. A key one file
+                omits loses its value in that language; a key <em>no</em> file
+                carries is retired from the app altogether, in all{" "}
+                {languages.length} languages. Leave it off when the delivery is
+                partial and the keys it omits should keep what they have.
               </span>
             </span>
           </Label>
+
+          {/* The one thing on this screen that reaches languages the reviewer
+              is not importing, so it is counted for them before Confirm rather
+              than reported afterwards. */}
+          {retired.length > 0 && (
+            <p className="text-destructive flex items-start gap-1.5 text-sm">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>
+                {retired.length} {retired.length === 1 ? "key is" : "keys are"}{" "}
+                in none of these files and will be deleted from {targetLabel}{" "}
+                entirely — the {retired.length === 1 ? "key" : "keys"} and{" "}
+                {retired.length === 1 ? "its" : "their"} text in every language,
+                not only the {codes.length === 1 ? "one" : codes.length} you are
+                importing.{" "}
+                <span className="font-mono">
+                  {retired.slice(0, 3).join(", ")}
+                </span>
+                {retired.length > 3 && ` and ${retired.length - 3} more`}.
+              </span>
+            </p>
+          )}
         </Step>
 
         <Step
@@ -447,7 +547,7 @@ export function ImportPage() {
           disabled={files.length === 0}
         >
           {results ? (
-            <Results results={results} target={target} label={targetLabel} />
+            <Results outcome={results} target={target} label={targetLabel} />
           ) : (
             <div className="flex flex-wrap items-center gap-3">
               <Button
@@ -468,7 +568,7 @@ export function ImportPage() {
         </Step>
       </div>
     </div>
-  )
+  );
 }
 
 function Step({
@@ -478,17 +578,17 @@ function Step({
   disabled = false,
   children,
 }: {
-  index: number
-  title: string
-  hint: string
-  disabled?: boolean
-  children: ReactNode
+  index: number;
+  title: string;
+  hint: string;
+  disabled?: boolean;
+  children: ReactNode;
 }) {
   return (
     <section
       className={cn(
         "flex flex-col gap-3 transition-opacity",
-        disabled && "pointer-events-none opacity-40"
+        disabled && "pointer-events-none opacity-40",
       )}
       aria-disabled={disabled}
     >
@@ -501,7 +601,7 @@ function Step({
       </div>
       {children}
     </section>
-  )
+  );
 }
 
 /** One staged file: what it is, which language it claims, what it would cost. */
@@ -514,21 +614,21 @@ function FileRow({
   onAssign,
   onRemove,
 }: {
-  file: StagedFile
-  diff: BundleDiff | undefined
-  isSelected: boolean
-  isDuplicate: boolean
-  onSelect: () => void
-  onAssign: (language: LanguageCode) => void
-  onRemove: () => void
+  file: StagedFile;
+  diff: BundleDiff | undefined;
+  isSelected: boolean;
+  isDuplicate: boolean;
+  onSelect: () => void;
+  onAssign: (language: LanguageCode) => void;
+  onRemove: () => void;
 }) {
-  const changes = diff ? changeCount(diff.counts) : null
+  const changes = diff ? changeCount(diff.counts) : null;
 
   return (
     <div
       className={cn(
         "flex flex-wrap items-center gap-3 px-3 py-2",
-        isSelected && "bg-accent/40"
+        isSelected && "bg-accent/40",
       )}
     >
       <button
@@ -585,17 +685,17 @@ function FileRow({
         <X />
       </Button>
     </div>
-  )
+  );
 }
 
 function DiffForFile({
   file,
   diff,
 }: {
-  file: StagedFile
-  diff: BundleDiff | undefined
+  file: StagedFile;
+  diff: BundleDiff | undefined;
 }) {
-  const language = languages.find((item) => item.code === file.language)
+  const language = languages.find((item) => item.code === file.language);
 
   if (!file.language) {
     return (
@@ -604,11 +704,11 @@ function DiffForFile({
         <span className="font-mono text-xs">{file.name}</span> is, and its diff
         appears here.
       </p>
-    )
+    );
   }
 
   if (!diff) {
-    return null
+    return null;
   }
 
   return (
@@ -640,28 +740,30 @@ function DiffForFile({
           {diff.invalid.length}{" "}
           {diff.invalid.length === 1 ? "key is" : "keys are"} named in a way
           this app cannot store and will be skipped —{" "}
-          <span className="font-mono">{diff.invalid.slice(0, 3).join(", ")}</span>
+          <span className="font-mono">
+            {diff.invalid.slice(0, 3).join(", ")}
+          </span>
           {diff.invalid.length > 3 && ` and ${diff.invalid.length - 3} more`}. A
-          key is lowercase dot-separated segments — group.section.name.
+          key is dot-separated segments — group.section.name.
         </p>
       )}
     </div>
-  )
+  );
 }
 
 function Results({
-  results,
+  outcome,
   target,
   label,
 }: {
-  results: ImportResult[]
-  target: string
-  label: string
+  outcome: ImportOutcome;
+  target: string;
+  label: string;
 }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col divide-y rounded-md border">
-        {results.map((result) => (
+        {outcome.files.map((result) => (
           <div
             key={result.id}
             className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm"
@@ -686,11 +788,27 @@ function Results({
         ))}
       </div>
 
+      {outcome.retireError ? (
+        <p className="text-destructive flex items-start gap-1.5 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          The files were written, but the keys they left out could not be
+          retired: {outcome.retireError}
+        </p>
+      ) : (
+        outcome.retired > 0 && (
+          <p className="text-muted-foreground text-sm">
+            {outcome.retired} {outcome.retired === 1 ? "key" : "keys"} no file
+            carried {outcome.retired === 1 ? "was" : "were"} removed from{" "}
+            {label} and every one of its language files.
+          </p>
+        )
+      )}
+
       <div>
         <Button render={<Link to={`/${target}`} />}>Open {label}</Button>
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -702,47 +820,47 @@ function Results({
  * region, and `school.vi.json` is a file named after both.
  */
 function languageFromName(name: string): LanguageCode | null {
-  const base = name.replace(/\.json$/i, "")
+  const base = name.replace(/\.json$/i, "");
   const candidates = new Set(
-    [base, ...base.split(/[._]/)].map((part) => part.trim().toLowerCase())
-  )
+    [base, ...base.split(/[._]/)].map((part) => part.trim().toLowerCase()),
+  );
 
   return (
     languages.find((item) => candidates.has(item.code.toLowerCase()))?.code ??
     null
-  )
+  );
 }
 
 /** The one sentence saying why Confirm is off, or null when it is on. */
 function whyNot(state: {
-  target: string
-  fileCount: number
-  unassigned: number
-  duplicated: number
-  isLoading: boolean
-  error: string | null
-  totalChanges: number
+  target: string;
+  fileCount: number;
+  unassigned: number;
+  duplicated: number;
+  isLoading: boolean;
+  error: string | null;
+  totalChanges: number;
 }): string | null {
   if (state.target === "") {
-    return "Choose an app first."
+    return "Choose an app first.";
   }
   if (state.fileCount === 0) {
-    return "Add at least one file."
+    return "Add at least one file.";
   }
   if (state.unassigned > 0) {
-    return `${state.unassigned} ${state.unassigned === 1 ? "file has" : "files have"} no language yet.`
+    return `${state.unassigned} ${state.unassigned === 1 ? "file has" : "files have"} no language yet.`;
   }
   if (state.duplicated > 0) {
-    return "Two files claim the same language — one would overwrite the other."
+    return "Two files claim the same language — one would overwrite the other.";
   }
   if (state.error) {
-    return "The app's current values could not be read."
+    return "The app's current values could not be read.";
   }
   if (state.isLoading) {
-    return "Reading what the app holds today…"
+    return "Reading what the app holds today…";
   }
   if (state.totalChanges === 0) {
-    return "These files change nothing."
+    return "These files change nothing.";
   }
-  return null
+  return null;
 }

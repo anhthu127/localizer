@@ -82,7 +82,7 @@ export function AddKeyDialog({
 
   const formatError =
     trimmedKey && !isValidKey(trimmedKey)
-      ? "Use lowercase dot-separated segments — group.section.name."
+      ? "Use dot-separated segments — group.section.name."
       : null
   const keyError =
     serverError ??

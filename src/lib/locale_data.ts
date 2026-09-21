@@ -115,12 +115,16 @@ export function groupKeyOf(key: string) {
 }
 
 /**
- * `school_admin/campus_admin.inviteadmin.text` and
- * `invitation-registernew.policy.accept` are both real keys in the export, so
- * `/` and `-` are allowed; a leading dot, a capital or a space is not, and at
- * least one dot is required because the first segment is the group.
+ * `school_admin/campus_admin.inviteadmin.text`,
+ * `invitation-registernew.policy.accept` and `common.link.repOnline` are all
+ * real keys in the export, so `/`, `-` and camelCase are allowed — 434 of the
+ * 3,339 seeded keys carry a capital, and rejecting them would have meant the
+ * app refusing to create or import a name 13% of its own data already uses.
+ *
+ * A leading dot, an empty segment and a space are still out, and at least one
+ * dot is required because the first segment is the group.
  */
-export const KEY_PATTERN = /^[a-z0-9][a-z0-9_/-]*(\.[a-z0-9_/-]+)+$/
+export const KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_/-]*(\.[A-Za-z0-9_/-]+)+$/
 
 export function isValidKey(key: string) {
   return KEY_PATTERN.test(key)
