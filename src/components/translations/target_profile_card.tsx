@@ -13,6 +13,7 @@ import {
   type ContentKind,
   type TargetProfile,
 } from "@/config/target_profiles"
+import { effectiveLengthBudget } from "@/lib/validation"
 
 const kindIcon: Record<ContentKind, typeof Type> = {
   ui: Type,
@@ -64,7 +65,7 @@ export function TargetProfileCard({
           <Field label="Audience">{profile.audience}</Field>
           <Field label="Tone">{profile.tone}</Field>
           <Field label="Length budget">
-            Warn past {profile.lengthBudget}× the English length
+            Warn past {effectiveLengthBudget(profile.lengthBudget)}× the English length
             {profile.maxLength
               ? `, hard limit ${profile.maxLength.toLocaleString()} characters`
               : ""}

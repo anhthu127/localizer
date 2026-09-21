@@ -235,11 +235,6 @@ export function TemplatesPage() {
         </div>
       </div>
 
-      <p className="text-muted-foreground border-b px-4 py-2 text-xs">
-        <span className="text-foreground font-medium">{profile.audience}.</span>{" "}
-        {profile.tone}
-      </p>
-
       {error && (
         <div className="text-destructive p-4 text-sm">
           Failed to load {match.leaf.title}: {error}

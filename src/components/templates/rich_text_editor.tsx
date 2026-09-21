@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import {
   Bold,
+  Heading,
   Italic,
   Link2,
   Link2Off,
@@ -80,6 +81,14 @@ export function RichTextEditor({
     emit()
   }
 
+  // The mail carries its own heading inside the body, so the block format has
+  // to be reachable: toggling, because a translator who made one line a
+  // heading by mistake has no other way back to a paragraph.
+  const heading = () => {
+    const current = document.queryCommandValue("formatBlock").toLowerCase()
+    run("formatBlock", current === "h1" ? "<p>" : "<h1>")
+  }
+
   const link = () => {
     // A prompt rather than an inline popover: focusing an input collapses the
     // selection `createLink` needs. `translations_page.tsx` asks about deleting
@@ -105,6 +114,9 @@ export function RichTextEditor({
           <Underline className="size-3.5" />
         </Tool>
         <span className="bg-border mx-1 h-4 w-px" />
+        <Tool label="Heading" onClick={heading}>
+          <Heading className="size-3.5" />
+        </Tool>
         <Tool label="Bulleted list" onClick={() => run("insertUnorderedList")}>
           <List className="size-3.5" />
         </Tool>
@@ -143,6 +155,7 @@ export function RichTextEditor({
           "focus-visible:ring-ring/50 focus-visible:ring-[3px]",
           "[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2",
           "[&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5",
+          "[&_h1]:mb-3 [&_h1]:text-base [&_h1]:font-semibold",
           "[&_p]:mb-3 [&_p:last-child]:mb-0",
           "[&_strong]:font-semibold [&_em]:italic",
           "[&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5",

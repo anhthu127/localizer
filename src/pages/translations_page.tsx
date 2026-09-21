@@ -402,11 +402,6 @@ export function TranslationsPage() {
         )}
       </div>
 
-      <p className="text-muted-foreground border-b px-4 py-2 text-xs">
-        <span className="text-foreground font-medium">{profile.audience}.</span>{" "}
-        {profile.tone}
-      </p>
-
       {hasKeys && (
         <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
           {statusFilters.map((filter) => (

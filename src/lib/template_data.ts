@@ -54,8 +54,6 @@ export type TemplateOwner = {
 
 export type TemplateFieldId =
   | "subject"
-  | "preheader"
-  | "heading"
   | "body"
   | "cta"
   | "footer"
@@ -84,8 +82,9 @@ export type TemplateField = {
 /**
  * The field schema per channel.
  *
- * Email follows the shape `docs/target_apps_ui.md` §6 predicted for the invite
- * mail — subject, preheader, greeting, body, CTA, footer — and caps the body at
+ * Email is subject, body, CTA and footer: the greeting and the mail's own
+ * heading live inside the rich-text body, where a translator can reorder or
+ * drop them the way the target language wants. The body is capped at
  * the 4,000 characters the legacy string
  * `notificationcreate.description.maxlength` says the backend enforces.
  */
@@ -100,26 +99,11 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       budget: 60,
     },
     {
-      id: "preheader",
-      label: "Preheader",
-      control: "line",
-      format: "text",
-      hint: "The grey line beside the subject in the inbox. Do not repeat the subject.",
-      budget: 90,
-    },
-    {
-      id: "heading",
-      label: "Heading",
-      control: "line",
-      format: "text",
-      hint: "The first line inside the mail, above the body.",
-    },
-    {
       id: "body",
       label: "Body",
       control: "rich",
       format: "html",
-      hint: "Write it as it should read; the toolbar handles the formatting. Keep every link and every {placeholder} the English has.",
+      hint: "Starts with the mail's heading — the toolbar's Heading button makes one. Keep every link and every {placeholder} the English has.",
       maxLength: 4000,
     },
     {
@@ -255,7 +239,7 @@ export const templateCategories = Object.keys(
  * Builds a template's field list from one channel's bundles.
  *
  * Fields with no English source are left out entirely rather than shown empty:
- * not every mail carries a preheader, and a field nobody wrote in English would
+ * not every mail carries a footer, and a field nobody wrote in English would
  * otherwise sit in the progress count forever, untranslatable.
  */
 export function entryOf(

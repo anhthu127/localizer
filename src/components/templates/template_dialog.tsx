@@ -15,7 +15,11 @@ import {
 import type { TargetProfile } from "@/config/target_profiles"
 import { findNavLeaf } from "@/config/nav_items"
 import { messageOf, saveTranslations } from "@/lib/api"
-import { languages, type LanguageCode } from "@/lib/locale_data"
+import {
+  languages,
+  SOURCE_LANGUAGE,
+  type LanguageCode,
+} from "@/lib/locale_data"
 import {
   categoryLabel,
   fieldOf,
@@ -70,6 +74,10 @@ export function TemplateDialog({
   const languageName =
     languages.find((item) => item.code === language)?.name ?? language
   const isRtl = languages.find((item) => item.code === language)?.rtl ?? false
+  // Editing English is editing the source itself: the toggle would offer the
+  // same text under two labels, so the preview keeps one.
+  const isSource = language === SOURCE_LANGUAGE
+  const previewMode: PreviewMode = isSource ? "target" : mode
   const leaf = findNavLeaf(template.owner.kind, template.owner.app)
   const OwnerIcon = template.owner.kind === "web" ? Globe : Smartphone
 
@@ -113,7 +121,7 @@ export function TemplateDialog({
   const previewValues: Partial<Record<TemplateFieldId, string>> = {}
   for (const field of fields) {
     previewValues[field.field] =
-      mode === "source" ? field.source : valueOf(field.field)
+      previewMode === "source" ? field.source : valueOf(field.field)
   }
 
   const placeholders = [
@@ -195,17 +203,19 @@ export function TemplateDialog({
               <h4 className="text-sm font-medium">Preview</h4>
               <div className="ml-auto flex gap-1">
                 <ModeButton
-                  isActive={mode === "target"}
+                  isActive={previewMode === "target"}
                   onClick={() => setMode("target")}
                 >
                   {languageName}
                 </ModeButton>
-                <ModeButton
-                  isActive={mode === "source"}
-                  onClick={() => setMode("source")}
-                >
-                  English
-                </ModeButton>
+                {!isSource && (
+                  <ModeButton
+                    isActive={previewMode === "source"}
+                    onClick={() => setMode("source")}
+                  >
+                    English
+                  </ModeButton>
+                )}
               </div>
             </div>
             <div className="p-4">
@@ -213,7 +223,7 @@ export function TemplateDialog({
                 channel={template.channel}
                 values={previewValues}
                 appName={leaf?.leaf.title ?? template.owner.app}
-                rtl={mode === "target" && isRtl}
+                rtl={previewMode === "target" && isRtl}
               />
             </div>
           </div>

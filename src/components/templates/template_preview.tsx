@@ -61,8 +61,6 @@ function Placeholder({ label }: { label: string }) {
 
 function EmailPreview({ values }: PreviewProps) {
   const subject = values.subject ?? ""
-  const preheader = values.preheader ?? ""
-  const heading = values.heading ?? ""
   const body = values.body ?? ""
   const cta = values.cta ?? ""
   const footer = values.footer ?? ""
@@ -79,13 +77,6 @@ function EmailPreview({ values }: PreviewProps) {
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">
               {subject ? previewText(subject) : <Placeholder label="Subject" />}
-            </p>
-            <p className="text-muted-foreground truncate text-xs">
-              {preheader ? (
-                previewText(preheader)
-              ) : (
-                <Placeholder label="Preheader" />
-              )}
             </p>
           </div>
         </div>
@@ -110,13 +101,9 @@ function EmailPreview({ values }: PreviewProps) {
         </div>
 
         <div className="bg-background px-5 py-5">
-          <h3 className="text-base font-semibold">
-            {heading ? previewText(heading) : <Placeholder label="Heading" />}
-          </h3>
-
           {body ? (
             <div
-              className="mt-3 text-sm leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_blockquote]:border-l [&_blockquote]:pl-3 [&_em]:italic [&_h1]:mt-4 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mt-4 [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:font-medium [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_small]:text-xs [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+              className="text-sm leading-relaxed [&>:first-child]:mt-0 [&_a]:underline [&_a]:underline-offset-2 [&_blockquote]:border-l [&_blockquote]:pl-3 [&_em]:italic [&_h1]:mt-4 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mt-4 [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:font-medium [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_small]:text-xs [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
               // Safe by construction: `previewHtml` escapes the value and then
               // reintroduces only a whitelist of tags it builds itself, so a
               // bundle cannot put markup of its own into this document.
@@ -124,7 +111,7 @@ function EmailPreview({ values }: PreviewProps) {
               dangerouslySetInnerHTML={{ __html: previewHtml(body) }}
             />
           ) : (
-            <p className="mt-3 text-sm">
+            <p className="text-sm">
               <Placeholder label="Body" />
             </p>
           )}
@@ -147,9 +134,14 @@ function EmailPreview({ values }: PreviewProps) {
 }
 
 /**
- * A phone message thread, plus the segment split spelled out: where the
- * message breaks, and what it costs, is the entire reason this channel has its
- * own screen.
+ * A phone message thread, plus what the message costs to send — the cost is
+ * the entire reason this channel has its own screen.
+ *
+ * Inside the phone is the message exactly as it arrives: one bubble, however
+ * many segments it costs, because the receiving handset reassembles the parts
+ * from their concatenation headers and the split is invisible to the reader.
+ * Nothing is annotated in there. The cost lives in the stats below the phone,
+ * where it reads as this tool's commentary rather than as message content.
  */
 function SmsPreview({
   values,
@@ -159,12 +151,6 @@ function SmsPreview({
   const message = previewText(values.message ?? "")
   const info = smsInfo(message)
   const capacity = info.encoding === "GSM-7" ? 153 : 67
-  const parts =
-    info.segments > 1
-      ? chunk(message, capacity)
-      : message
-        ? [message]
-        : []
 
   return (
     <>
@@ -172,26 +158,14 @@ function SmsPreview({
         <p className="text-muted-foreground mb-3 text-center text-xs font-medium">
           {appName}
         </p>
-        {parts.length === 0 ? (
+        {message ? (
+          <div className="bg-background max-w-[85%] rounded-2xl rounded-bl-sm border px-3 py-2 text-sm break-words shadow-sm">
+            {message}
+          </div>
+        ) : (
           <p className="text-center text-xs">
             <Placeholder label="Message" />
           </p>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            {parts.map((part, index) => (
-              <div
-                key={index}
-                className="bg-background max-w-[85%] rounded-2xl rounded-bl-sm border px-3 py-2 text-sm break-words shadow-sm"
-              >
-                {part}
-                {parts.length > 1 && (
-                  <span className="text-muted-foreground mt-1 block text-[10px]">
-                    part {index + 1} of {parts.length}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
         )}
       </div>
 
@@ -293,16 +267,4 @@ function NotificationPreview({
       </div>
     </>
   )
-}
-
-/** Splits a message the way a carrier does — by characters, not by words. */
-function chunk(value: string, size: number): string[] {
-  const parts: string[] = []
-  const characters = [...value]
-
-  for (let index = 0; index < characters.length; index += size) {
-    parts.push(characters.slice(index, index + size).join(""))
-  }
-
-  return parts
 }

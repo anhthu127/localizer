@@ -235,6 +235,19 @@ type CheckOptions = {
  */
 const MIN_SOURCE_LENGTH = 50
 
+/**
+ * Ratio below which a length warning says nothing.
+ *
+ * A translation under twice the English length still fits every layout we
+ * measured, so a tighter per-target budget only crowds the queue with rows a
+ * translator would leave as they are.
+ */
+const MIN_LENGTH_RATIO = 2
+
+export function effectiveLengthBudget(lengthBudget: number): number {
+  return Math.max(lengthBudget, MIN_LENGTH_RATIO)
+}
+
 /** Ordered most severe first, so a row can show the worst one inline. */
 export function checkTranslation(
   source: string,
@@ -296,7 +309,7 @@ export function checkTranslation(
     })
   }
 
-  if (target.length > source.length * lengthBudget) {
+  if (target.length > source.length * effectiveLengthBudget(lengthBudget)) {
     const ratio = (target.length / source.length).toFixed(1)
     issues.push({
       id: "length",
@@ -329,6 +342,88 @@ export type SmsInfo = {
   remaining: number
 }
 
+const SINGLE = { "GSM-7": 160, "UCS-2": 70 } as const
+/** Lower, because each part of a split message carries a concatenation header. */
+const CONCATENATED = { "GSM-7": 153, "UCS-2": 67 } as const
+
+function encodingOf(value: string): SmsInfo["encoding"] {
+  for (const char of value) {
+    if (!gsm7.has(char) && !gsm7Extended.has(char)) {
+      return "UCS-2"
+    }
+  }
+
+  return "GSM-7"
+}
+
+/**
+ * What one character costs against the segment budget.
+ *
+ * UCS-2 bills per UTF-16 code unit, so an emoji costs two. GSM-7 bills one,
+ * except for the nine characters sent as an escape pair.
+ */
+function unitCost(char: string, encoding: SmsInfo["encoding"]): number {
+  if (encoding === "UCS-2") {
+    return char.length
+  }
+
+  return gsm7Extended.has(char) ? 2 : 1
+}
+
+function unitsOf(value: string, encoding: SmsInfo["encoding"]): number {
+  let units = 0
+
+  for (const char of value) {
+    units += unitCost(char, encoding)
+  }
+
+  return units
+}
+
+/**
+ * Where a carrier actually breaks a message, as the text of each part.
+ *
+ * Splitting is by billed unit rather than by character: an escape pair or a
+ * surrogate pair is never torn across a boundary, so a part can close one unit
+ * short rather than split a character in half. Counting the parts is therefore
+ * the only honest way to reach a segment count — dividing the units by the
+ * capacity misses the unit a straddling character leaves behind.
+ *
+ * A message that fits in a single segment comes back as one part.
+ */
+function smsSegments(value: string): string[] {
+  if (!value) {
+    return []
+  }
+
+  const encoding = encodingOf(value)
+  if (unitsOf(value, encoding) <= SINGLE[encoding]) {
+    return [value]
+  }
+
+  const capacity = CONCATENATED[encoding]
+  const parts: string[] = []
+  let current = ""
+  let used = 0
+
+  for (const char of value) {
+    const cost = unitCost(char, encoding)
+    if (used + cost > capacity) {
+      parts.push(current)
+      current = ""
+      used = 0
+    }
+    current += char
+    used += cost
+  }
+
+  if (current) {
+    parts.push(current)
+  }
+
+  return parts
+}
+
 /**
  * A segment holds 160 GSM-7 characters or 70 UCS-2 ones, dropping to 153 / 67
  * once a message splits, because each part carries a concatenation header.
@@ -338,40 +433,27 @@ export type SmsInfo = {
  * meter sits on the row rather than in a validation report nobody opens.
  */
 export function smsInfo(value: string): SmsInfo {
-  let units = 0
-  let unicode = false
+  const encoding = encodingOf(value)
+  const units = unitsOf(value, encoding)
 
-  for (const char of value) {
-    if (gsm7.has(char)) {
-      units += 1
-    } else if (gsm7Extended.has(char)) {
-      units += 2
-    } else {
-      unicode = true
-      // Astral characters (emoji) take two UTF-16 code units.
-      units += char.length
+  if (units === 0) {
+    return {
+      encoding: "GSM-7",
+      units: 0,
+      segments: 0,
+      remaining: SINGLE["GSM-7"],
     }
   }
 
-  if (unicode) {
-    // GSM-7 escape counting does not apply once the message is UCS-2.
-    units = [...value].reduce((sum, char) => sum + char.length, 0)
-  }
-
-  const single = unicode ? 70 : 160
-  const multi = unicode ? 67 : 153
-
-  if (units === 0) {
-    return { encoding: "GSM-7", units: 0, segments: 0, remaining: single }
-  }
-
-  const segments = units <= single ? 1 : Math.ceil(units / multi)
-  const capacity = segments === 1 ? single : multi * segments
+  const parts = smsSegments(value)
+  const capacity =
+    parts.length === 1 ? SINGLE[encoding] : CONCATENATED[encoding]
+  const last = unitsOf(parts[parts.length - 1], encoding)
 
   return {
-    encoding: unicode ? "UCS-2" : "GSM-7",
+    encoding,
     units,
-    segments,
-    remaining: capacity - units,
+    segments: parts.length,
+    remaining: capacity - last,
   }
 }
