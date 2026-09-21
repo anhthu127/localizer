@@ -40,6 +40,8 @@ import type {
   CreateKeyResponse,
   EntriesResponse,
   GroupCoverage,
+  ImportMode,
+  ImportResponse,
   KeyRecord,
   LanguageCoverage,
   ReviewIssues,
@@ -560,6 +562,149 @@ export function createStore(files: FileStore, seeds: SeedSource) {
       writeAuditLog(target, language, log)
 
       return { saved: keys.length, file: relativeBundlePath(target, language) }
+    },
+
+    /**
+     * Replaces one app's language file with an uploaded one, and registers the
+     * keys it brings that the app did not have.
+     *
+     * A file is allowed to extend the registry, so an app's keys can arrive as
+     * a delivery rather than one dialog at a time. A key created this way is
+     * registered from the file being imported and carried into every other
+     * language with no text, which means a file that is not English registers
+     * the key with no English either: it reads as missing there until somebody
+     * fills it in, and the preview says so before any of this happens.
+     *
+     * `replace` is a real replace — a key the file leaves out is emptied, and
+     * reads as missing again. `merge` leaves those keys alone. Neither drops a
+     * key from the registry; replacing a language is not a statement about
+     * which keys the app has. The browser has shown the reviewer which of the
+     * two they are about to do, computed with the same rule
+     * (`lib/bundle_diff.ts`), but the counts returned here are what actually
+     * happened to the file.
+     */
+    importBundle(
+      target: string,
+      code: string,
+      values: Record<string, string>,
+      mode: ImportMode,
+      by: string
+    ): ImportResponse {
+      const language = languageOf(code)
+      const records = keyRecords().filter((record) => record.target === target)
+      const known = new Set(records.map((record) => record.key))
+      const at = new Date().toISOString()
+
+      // The same rule the preview drew in `bundle_diff.ts`, written out again
+      // here because the store writes straight to disk and cannot take the
+      // browser's word for what the file holds: a key the registry does not
+      // have is registered from the file, unless its name is one the registry
+      // cannot address at all.
+      const invalid: string[] = []
+      const fresh: KeyRecord[] = []
+
+      for (const key of Object.keys(values)) {
+        if (known.has(key)) {
+          continue
+        }
+        if (!isValidKey(key)) {
+          invalid.push(key)
+          continue
+        }
+        fresh.push({
+          key,
+          group: groupKeyOf(key),
+          target,
+          origin: "import",
+          createdAt: at,
+          createdBy: by,
+        })
+      }
+
+      if (records.length === 0 && fresh.length === 0) {
+        throw new HttpError(404, `No keys in ${target} to import into`)
+      }
+
+      const current = bundle(target, language)
+      const log = { ...auditLog(target, language) }
+      const next: LocaleBundle = {}
+
+      let added = 0
+      let changed = 0
+      let removed = 0
+      let unchanged = 0
+
+      for (const record of records) {
+        const before = current[record.key] ?? ""
+        const incoming = values[record.key]
+        const after =
+          incoming === undefined ? (mode === "replace" ? "" : before) : incoming
+
+        next[record.key] = after
+
+        if (after === before) {
+          unchanged += 1
+          continue
+        }
+
+        if (before === "") {
+          added += 1
+        } else if (after === "") {
+          removed += 1
+        } else {
+          changed += 1
+        }
+
+        // Same rule as `saveTranslations`: an emptied value is not a
+        // translation anybody made, so its stamp goes with it.
+        if (after === "") {
+          delete log[record.key]
+        } else {
+          log[record.key] = { by, at }
+        }
+      }
+
+      // Counted as `created` rather than `added`: the key did not exist to be
+      // filled in. Its text still earns a stamp — somebody wrote it.
+      for (const record of fresh) {
+        const after = values[record.key]
+        next[record.key] = after
+
+        if (after !== "") {
+          log[record.key] = { by, at }
+        }
+      }
+
+      writeBundle(target, language, next)
+      writeAuditLog(target, language, log)
+
+      if (fresh.length > 0) {
+        // Every language carries every key, exactly as `createKey` leaves it:
+        // a language with no text for one reads as missing rather than as a
+        // language the key was never meant for.
+        for (const item of languages) {
+          if (item.code === language) {
+            continue
+          }
+          const others = { ...bundle(target, item.code) }
+          for (const record of fresh) {
+            others[record.key] = ""
+          }
+          writeBundle(target, item.code, others)
+        }
+
+        writeKeys([...keyRecords(), ...fresh])
+      }
+
+      return {
+        created: fresh.length,
+        added,
+        changed,
+        removed,
+        unchanged,
+        invalid,
+        file: relativeBundlePath(target, language),
+      }
     },
 
     /* ---------------------------------------------------------------- export */

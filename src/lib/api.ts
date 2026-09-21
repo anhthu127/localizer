@@ -18,6 +18,9 @@ import type {
   CreateKeyResponse,
   EntriesResponse,
   ExportRequest,
+  ImportMode,
+  ImportRequest,
+  ImportResponse,
   SaveTranslationsRequest,
   SaveTranslationsResponse,
   TemplatesResponse,
@@ -159,6 +162,31 @@ export function saveTranslations(
       } satisfies SaveTranslationsRequest),
     }
   )
+}
+
+/**
+ * Replaces one app's language file with an uploaded one.
+ *
+ * Whole-file, unlike `saveTranslations` above: the browser has already shown
+ * the reviewer what it would change (`lib/bundle_diff.ts`) and this is the
+ * confirmation. The server applies the same rule to the same file rather than
+ * trusting a diff computed in the tab, so a key somebody edited while the
+ * preview was open cannot be written from a stale reading of it.
+ */
+export function importBundle(
+  target: string,
+  lang: LanguageCode,
+  values: Record<string, string>,
+  mode: ImportMode
+) {
+  return request<ImportResponse>(`/import/${lang}?${query({ target })}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      values,
+      mode,
+      by: currentUser.name,
+    } satisfies ImportRequest),
+  })
 }
 
 export function fetchCoverage() {

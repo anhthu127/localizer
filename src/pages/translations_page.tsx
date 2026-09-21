@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Search } from "lucide-react"
+import { Search, Upload } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { Navigate, useParams, useSearchParams } from "react-router"
+import { Link, Navigate, useParams, useSearchParams } from "react-router"
 import { toast } from "sonner"
 
 import { AddKeyDialog } from "@/components/translations/add_key_dialog"
@@ -259,6 +259,12 @@ export function TranslationsPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/* The app, and the three actions that act on the whole of it.
+          Deliberately not in the filter row below: none of them obey a filter.
+          An export is a release artifact and always the whole app, an import
+          replaces a language file entire, and a key is created in every
+          language at once — a reader should not have to learn that from the
+          dialogs after assuming the search box applied. */}
       <div className="flex flex-wrap items-center gap-2 border-b p-4">
         <div className="mr-1 flex items-center gap-2">
           <h2 className="text-base font-semibold">{match.leaf.title}</h2>
@@ -270,6 +276,38 @@ export function TranslationsPage() {
           )}
         </div>
 
+        <div className="ml-auto flex items-center gap-2">
+          {hasKeys && (
+            <>
+              {/* A link, not a dialog: the wizard takes a dozen files, each
+                  with its own language and its own diff. Leaving the workspace
+                  also drops the unsaved tray, which an import would have
+                  invalidated anyway — the edits were made against values the
+                  import replaces. */}
+              <Button
+                variant="outline"
+                render={<Link to={`/import?target=${profile.path}`} />}
+              >
+                <Upload data-icon="inline-start" />
+                Import
+              </Button>
+              <ExportDialog
+                target={profile.path}
+                targetTitle={match.leaf.title}
+                language={language}
+              />
+            </>
+          )}
+          {addKeyDialog}
+        </div>
+      </div>
+
+      {/* Which rows you are looking at: the language, and what narrows it.
+          The coverage readout sits here rather than with the title because it
+          is the selected language's, and changes when that select changes —
+          though not when the group or the search does, which count the whole
+          language. */}
+      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
         <Select
           value={language}
           onValueChange={(value) => setLanguage(value as LanguageCode)}
@@ -304,29 +342,17 @@ export function TranslationsPage() {
                 className="w-56 pl-8"
               />
             </div>
-          </>
-        )}
 
-        <div className="ml-auto flex items-center gap-3">
-          {hasKeys && (
-            <>
+            <div className="ml-auto flex items-center gap-3">
               <div className="w-40">
                 <Progress value={percent} />
               </div>
               <span className="text-muted-foreground text-sm tabular-nums">
                 {percent}% · {translatedCount}/{rows.length}
               </span>
-            </>
-          )}
-          {hasKeys && (
-            <ExportDialog
-              target={profile.path}
-              targetTitle={match.leaf.title}
-              language={language}
-            />
-          )}
-          {addKeyDialog}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <p className="text-muted-foreground border-b px-4 py-2 text-xs">

@@ -96,6 +96,38 @@ export type SaveTranslationsResponse = {
   file: string
 }
 
+/**
+ * What a whole-file import does to the keys the file leaves out.
+ *
+ * `replace` — the language becomes the file: an omitted key loses its value.
+ * `merge` — an omitted key keeps whatever it already had, which is what a
+ * partial file from a translation agency usually means.
+ */
+export type ImportMode = "replace" | "merge"
+
+/** `PUT /api/import/:lang?target=` — one language file, wholesale. */
+export type ImportRequest = {
+  /** The file's contents, flattened to `key: text` — see `lib/bundle_diff.ts`. */
+  values: Record<string, string>
+  mode: ImportMode
+  /** Who is importing it, for the audit trail — see `CreateKeyRequest`. */
+  by?: string
+}
+
+/** The same tallies the preview showed, as the server actually applied them. */
+export type ImportResponse = {
+  /** Keys the file brought that the registry did not hold, now registered. */
+  created: number
+  added: number
+  changed: number
+  removed: number
+  unchanged: number
+  /** Keys whose names the registry cannot accept. Neither written nor created. */
+  invalid: string[]
+  /** Where the server wrote the file, so the UI can say so. */
+  file: string
+}
+
 export type ReviewIssues = {
   placeholder: number
   whitespace: number

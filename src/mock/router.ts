@@ -15,6 +15,7 @@
  *   DELETE /keys?target=&key=        delete one app's key, every language
  *   PUT    /translations/:lang?target=
  *                                    save a batch of one app's translations
+ *   PUT    /import/:lang?target=     replace one app's language file wholesale
  *   POST   /export                   a .zip, one named file per language
  *   GET    /coverage                 per-language totals, every app
  *   POST   /reset                    re-seed from sample-data
@@ -31,6 +32,7 @@
 import type {
   CreateKeyRequest,
   ExportRequest,
+  ImportRequest,
   SaveTranslationsRequest,
 } from "../lib/api_types.ts"
 import { safeFileName } from "../lib/file_name.ts"
@@ -110,6 +112,37 @@ async function route(
         required(query.get("target"), "target"),
         translations[1],
         input.values,
+        author(input.by)
+      )
+    )
+  }
+
+  const imported = /^\/import\/([A-Za-z-]+)$/.exec(path)
+  if (method === "PUT" && imported) {
+    const input = await body<ImportRequest>(request)
+
+    if (!input.values || typeof input.values !== "object") {
+      throw new HttpError(400, "Expected { values: { key: text } }")
+    }
+    // A file that reached here has been read and previewed in the browser, so
+    // a value that is not text is a caller bug rather than a bad upload — but
+    // the store writes straight to disk, so it is checked here all the same.
+    for (const [key, value] of Object.entries(input.values)) {
+      if (typeof value !== "string") {
+        throw new HttpError(400, `"${key}" is not text.`)
+      }
+    }
+    if (input.mode !== "replace" && input.mode !== "merge") {
+      throw new HttpError(400, `Expected "mode" to be "replace" or "merge"`)
+    }
+
+    return json(
+      200,
+      store.importBundle(
+        required(query.get("target"), "target"),
+        imported[1],
+        input.values,
+        input.mode,
         author(input.by)
       )
     )
