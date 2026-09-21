@@ -1,0 +1,16 @@
+{
+  "_readme": "A line here overrides what scripts/build_context_map.mjs reads out of the file, and is the only description for a file that documents itself nowhere — the house style keeps source comment-free. The script warns about a file left with neither, and about an entry whose file is gone. Keys are repo-relative paths.",
+  "src/App.tsx": "The route table: providers, the shell route, and `/:sectionId/:leafId` under it.",
+  "src/main.tsx": "Mounts `App` into `#root`. Nothing else lives here.",
+  "src/index.css": "Tailwind v4 entry and every shadcn design token, light and dark. The only stylesheet.",
+  "src/lib/utils.ts": "`cn()` — the Tailwind class merger every component imports.",
+  "src/hooks/use-mobile.ts": "Viewport width as a boolean, for the sidebar's drawer/rail switch. shadcn-generated name, hence the dash.",
+  "src/config/nav_items.ts": "The sidebar tree, and the source of every route: `/{section.id}/{leaf.id}`.",
+  "src/pages/dashboard_page.tsx": "Route `/` — coverage stat tiles, the gaps card and the jump-in shortcuts.",
+  "src/components/layout/app_header.tsx": "Top bar: sidebar trigger, breadcrumb, language picker, theme toggle.",
+  "src/components/layout/app_sidebar.tsx": "The nav tree from `config/nav_items.ts`, with its outstanding-count badges.",
+  "src/components/dashboard/stat_tile.tsx": "One headline number with a label and hint; skeletons while it loads.",
+  "src/components/translations/group_filter.tsx": "Searchable group combobox; `ALL_GROUPS` is its unset sentinel.",
+  "src/components/theme_toggle.tsx": "Light/dark switch over next-themes.",
+  "src/lib/motion.ts": "The app’s one motion vocabulary: the durations, eases and variants every animated component uses."
+}
