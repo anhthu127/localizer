@@ -38,6 +38,8 @@ import type {
   AuditLog,
   CoverageResponse,
   CreateKeyResponse,
+  DeleteKeysResponse,
+  DeleteScope,
   EntriesResponse,
   GroupCoverage,
   ImportMode,
@@ -349,17 +351,6 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     return language.code
   }
 
-  /** Keys are unique per app, not globally — both halves are needed. */
-  function recordOf(target: string, key: string): KeyRecord {
-    const record = keyRecords().find(
-      (item) => item.key === key && item.target === target
-    )
-    if (!record) {
-      throw new HttpError(404, `No key "${key}" in ${target}`)
-    }
-    return record
-  }
-
   return {
     /* ----------------------------------------------------------------- keys */
 
@@ -428,24 +419,73 @@ export function createStore(files: FileStore, seeds: SeedSource) {
       return { key: record, languages: languages.map((item) => item.code) }
     },
 
-    deleteKey(target: string, key: string) {
-      recordOf(target, key)
+    /**
+     * Removes keys from one app, as far as the scope says — see `DeleteScope`.
+     *
+     * The selection is intersected with what the app actually holds before
+     * anything is written, so a stale tab cannot make the counts lie, and the
+     * language files are rewritten once each rather than once per key: a bulk
+     * delete is thousands of keys over thirteen files, not the other way round.
+     */
+    deleteKeys(input: {
+      target: string
+      keys: string[]
+      scope: DeleteScope
+      language?: string
+    }): DeleteKeysResponse {
+      const { target, scope } = input
 
-      for (const language of languages) {
-        const values = { ...bundle(target, language.code) }
-        delete values[key]
-        writeBundle(target, language.code, values)
-
-        const log = { ...auditLog(target, language.code) }
-        delete log[key]
-        writeAuditLog(target, language.code, log)
+      if (input.keys.length === 0) {
+        throw new HttpError(400, "Pick at least one key to delete.")
       }
 
-      writeKeys(
-        keyRecords().filter(
-          (item) => !(item.key === key && item.target === target)
-        )
+      const asked = new Set(input.keys)
+      const held = new Set(
+        keyRecords()
+          .filter((record) => record.target === target && asked.has(record.key))
+          .map((record) => record.key)
       )
+
+      if (held.size === 0) {
+        throw new HttpError(
+          404,
+          asked.size === 1
+            ? `No key "${input.keys[0]}" in ${target}`
+            : `None of those ${asked.size} keys are in ${target}`
+        )
+      }
+
+      const codes =
+        scope === "all"
+          ? languages.map((item) => item.code)
+          : [languageOf(input.language ?? "")]
+
+      for (const code of codes) {
+        const values = { ...bundle(target, code) }
+        const log = { ...auditLog(target, code) }
+
+        for (const key of held) {
+          delete values[key]
+          delete log[key]
+        }
+
+        writeBundle(target, code, values)
+        writeAuditLog(target, code, log)
+      }
+
+      if (scope === "all") {
+        writeKeys(
+          keyRecords().filter(
+            (record) => !(record.target === target && held.has(record.key))
+          )
+        )
+      }
+
+      return {
+        scope,
+        deleted: held.size,
+        files: codes.map((code) => relativeBundlePath(target, code)),
+      }
     },
 
     /* --------------------------------------------------------------- entries */

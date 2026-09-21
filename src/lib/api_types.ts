@@ -83,6 +83,41 @@ export type CreateKeyResponse = {
   languages: LanguageCode[]
 }
 
+/**
+ * How far a delete reaches.
+ *
+ * `language` — the values go from one language file and the keys stay in the
+ * registry, so they read as missing there and every other language keeps its
+ * translation. This is the cleanup a translator does.
+ * `all` — the keys leave the registry and every language file of the app. The
+ * string is gone from the product.
+ */
+export type DeleteScope = "language" | "all"
+
+/**
+ * `POST /api/keys/delete` — remove keys from one app.
+ *
+ * A POST with a body rather than `DELETE /keys?key=`: a bulk selection is
+ * thousands of keys and real keys contain slashes, so neither fits a query
+ * string, and a DELETE body is the one thing HTTP caches and proxies are
+ * entitled to drop.
+ */
+export type DeleteKeysRequest = {
+  target: string
+  keys: string[]
+  scope: DeleteScope
+  /** Which language `scope: "language"` clears. Unused when the scope is `all`. */
+  language?: LanguageCode
+}
+
+export type DeleteKeysResponse = {
+  scope: DeleteScope
+  /** Keys the app actually held. A key it does not know is not counted. */
+  deleted: number
+  /** The language files the server rewrote, so the UI can say where. */
+  files: string[]
+}
+
 /** `PUT /api/translations/:lang?target=` */
 export type SaveTranslationsRequest = {
   values: Record<string, string>

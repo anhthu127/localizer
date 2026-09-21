@@ -28,6 +28,21 @@ and what the dashboard's gaps card counts.
 
 **Origin** is `import` (arrived with a bundle) or `manual` (added in the UI).
 
+## Delete scope — `DeleteScope`
+
+Deleting keys asks one question, and it is not "are you sure": how far does it
+go. `lib/api_types.ts` names the two answers, and `POST /api/keys/delete` takes
+one of them with a list of keys — a row's trash button sends a list of one.
+
+- **`language`** — the values leave one language file and its audit log. The
+  keys stay in `keys.json`, so they read as *missing* in that language and keep
+  their text in the other twelve. A translator's cleanup.
+- **`all`** — the keys leave `keys.json` and every language file of the app.
+  The string is retired from the product.
+
+The scope never crosses apps: a key deleted from `app/parent` is untouched in
+`app/student`, the same way `createKey` only ever fans out within one target.
+
 ## Bundle
 
 One language file for one target: `{ "key": "text" }`, flat, one level.

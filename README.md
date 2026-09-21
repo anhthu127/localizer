@@ -136,7 +136,7 @@ once, and in that app only.
 | GET    | `/api/entries?target=&lang=`         | one app's keys, status computed            |
 | GET    | `/api/templates?target=&lang=`       | one channel's templates, text included      |
 | POST   | `/api/keys`                          | create a key in one app, in every language  |
-| DELETE | `/api/keys?target=&key=`             | delete one app's key, from every language   |
+| POST   | `/api/keys/delete`                   | delete one app's keys, in one language or all |
 | PUT    | `/api/translations/:lang?target=`    | save a batch of one app's translations      |
 | PUT    | `/api/import/:lang?target=`          | one app's language file, wholesale          |
 | POST   | `/api/export`                        | a .zip, one named file per language         |

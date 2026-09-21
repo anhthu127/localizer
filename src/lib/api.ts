@@ -16,6 +16,8 @@ import type {
   CoverageResponse,
   CreateKeyRequest,
   CreateKeyResponse,
+  DeleteKeysRequest,
+  DeleteKeysResponse,
   EntriesResponse,
   ExportRequest,
   ImportMode,
@@ -143,8 +145,18 @@ export function createKey(input: CreateKeyRequest) {
   })
 }
 
-export function deleteKey(target: string, key: string) {
-  return request<void>(`/keys?${query({ target, key })}`, { method: "DELETE" })
+/**
+ * Removes keys from one app, one language or all of them — see `DeleteScope`.
+ *
+ * One call whether the screen is deleting a row or a selection of four
+ * thousand: a single key is a selection of one, and the server rewrites each
+ * language file once either way.
+ */
+export function deleteKeys(input: DeleteKeysRequest) {
+  return request<DeleteKeysResponse>("/keys/delete", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
 }
 
 export function saveTranslations(

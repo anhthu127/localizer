@@ -75,6 +75,7 @@ and `file_map.overrides.json` where it does not.
 
 - `src/components/translations/add_key_dialog.tsx` — Adding a key belongs to an app, not to the product.
 - `src/components/translations/bundle_diff_view.tsx` — What the import would do, laid out the way a pull request lays out its files.
+- `src/components/translations/delete_keys_dialog.tsx` — The one confirmation for every delete on the workspace — one row's trash button and a selection of four thousand reach the same dialog, because they ask the same question and a …
 - `src/components/translations/export_dialog.tsx` — Exports one app as a zip of locale files.
 - `src/components/translations/group_filter.tsx` — Searchable group combobox; `ALL_GROUPS` is its unset sentinel.
 - `src/components/translations/target_profile_card.tsx` — The empty state for an app with no keys yet — nine of the ten, until someone adds one or imports a bundle.
