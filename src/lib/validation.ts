@@ -1,15 +1,14 @@
 /**
  * Per-row checks on a translation.
  *
- * These carry more weight than they used to. Status no longer compares the
- * target value to the English one, so a bundle that is a verbatim copy of
- * English — or, as with `ms.json`, a copy of a different language altogether —
- * reads as fully translated. These checks are the only automatic signal left
- * that a value is wrong.
+ * `statusOf` catches a value that is absent, empty or a verbatim copy of the
+ * English source. What it cannot catch is a bundle holding the wrong language
+ * altogether — `ms.json` in the sample data holds Chinese — so for that, and
+ * for placeholders, markup and links, these checks are the only automatic
+ * signal that a translated value is wrong.
  *
- * `scripts/generate_coverage.mjs` repeats the script, whitespace and
- * placeholder rules so the dashboard can count them without loading every
- * bundle; this file is the canonical definition. Keep the two in step.
+ * `src/mock/store.ts` imports `checkTranslation` from here rather than
+ * restating it, so the dashboard counts and a row flags the same issues.
  */
 
 import type { LanguageCode } from "@/lib/locale_data"

@@ -1,11 +1,12 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Search } from "lucide-react"
+import { Search, Trash2, Upload } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { Navigate, useParams, useSearchParams } from "react-router"
+import { Link, Navigate, useParams, useSearchParams } from "react-router"
 import { toast } from "sonner"
 
 import { AddKeyDialog } from "@/components/translations/add_key_dialog"
+import { DeleteKeysDialog } from "@/components/translations/delete_keys_dialog"
 import {
   ALL_GROUPS,
   GroupFilter,
@@ -18,6 +19,7 @@ import {
 } from "@/components/translations/translation_row"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -31,7 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { findNavLeaf } from "@/config/nav_items"
 import { kindLabel, profileOf } from "@/config/target_profiles"
 import { useTranslationRows } from "@/hooks/use_translation_rows"
-import { deleteKey, messageOf, saveTranslations } from "@/lib/api"
+import { messageOf, saveTranslations } from "@/lib/api"
 import { fadeIn, slideUpBar, transitions } from "@/lib/motion"
 import {
   groupOptionsOf,
@@ -105,6 +107,14 @@ export function TranslationsPage() {
   const [status, setStatus] = useState<StatusFilter>("all")
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  // What the delete dialog is asking about: one row's trash button, or the
+  // selection. Empty means closed.
+  const [doomed, setDoomed] = useState<string[]>([])
+
+  // Keys are unique per app, so a selection made in one app means nothing in
+  // the next. Switching language keeps it: the keys are the same list.
+  useEffect(() => setSelected(new Set()), [profile.path])
 
   const { rows, isLoading, error, reload } = useTranslationRows(
     profile.path,
@@ -190,6 +200,11 @@ export function TranslationsPage() {
 
   const dirtyKeys = Object.keys(edits)
 
+  const selectedInView = filtered.filter((row) => selected.has(row.key)).length
+  const allFilteredSelected =
+    filtered.length > 0 && selectedInView === filtered.length
+  const someFilteredSelected = selectedInView > 0 && !allFilteredSelected
+
   const handleChange = (key: string, value: string) => {
     setEdits((current) => ({ ...current, [key]: value }))
   }
@@ -214,23 +229,55 @@ export function TranslationsPage() {
     }
   }
 
-  const handleDelete = async (key: string) => {
-    if (!confirm(`Delete ${key} from every language in this app?`)) {
-      return
-    }
+  const handleSelect = (key: string, isOn: boolean) => {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (isOn) {
+        next.add(key)
+      } else {
+        next.delete(key)
+      }
+      return next
+    })
+  }
 
-    try {
-      await deleteKey(profile.path, key)
-      setEdits((current) => {
-        const next = { ...current }
-        delete next[key]
-        return next
-      })
-      reload()
-      toast.success(`Deleted ${key}`)
-    } catch (cause: unknown) {
-      toast.error("Could not delete", { description: messageOf(cause) })
-    }
+  // The header checkbox acts on what the filters left on screen, not on the
+  // whole app — the filters are how a bulk delete is aimed.
+  const handleSelectAll = (isOn: boolean) => {
+    setSelected((current) => {
+      const next = new Set(current)
+      for (const row of filtered) {
+        if (isOn) {
+          next.add(row.key)
+        } else {
+          next.delete(row.key)
+        }
+      }
+      return next
+    })
+  }
+
+  /**
+   * A deleted key's unsaved edit goes with it, whatever the scope: deleted
+   * everywhere there is no key left to save it against, and cleared in this
+   * language the value it was editing has just been thrown away on purpose.
+   */
+  const handleDeleted = (keys: string[]) => {
+    const gone = new Set(keys)
+
+    setEdits((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(([key]) => !gone.has(key))
+      )
+    )
+    setSelected((current) => {
+      const next = new Set(current)
+      for (const key of keys) {
+        next.delete(key)
+      }
+      return next
+    })
+    reload()
   }
 
   // Refetch, then scope the list to the new key so it is the thing on screen
@@ -259,6 +306,12 @@ export function TranslationsPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/* The app, and the three actions that act on the whole of it.
+          Deliberately not in the filter row below: none of them obey a filter.
+          An export is a release artifact and always the whole app, an import
+          replaces a language file entire, and a key is created in every
+          language at once — a reader should not have to learn that from the
+          dialogs after assuming the search box applied. */}
       <div className="flex flex-wrap items-center gap-2 border-b p-4">
         <div className="mr-1 flex items-center gap-2">
           <h2 className="text-base font-semibold">{match.leaf.title}</h2>
@@ -270,6 +323,38 @@ export function TranslationsPage() {
           )}
         </div>
 
+        <div className="ml-auto flex items-center gap-2">
+          {hasKeys && (
+            <>
+              {/* A link, not a dialog: the wizard takes a dozen files, each
+                  with its own language and its own diff. Leaving the workspace
+                  also drops the unsaved tray, which an import would have
+                  invalidated anyway — the edits were made against values the
+                  import replaces. */}
+              <Button
+                variant="outline"
+                render={<Link to={`/import?target=${profile.path}`} />}
+              >
+                <Upload data-icon="inline-start" />
+                Import
+              </Button>
+              <ExportDialog
+                target={profile.path}
+                targetTitle={match.leaf.title}
+                language={language}
+              />
+            </>
+          )}
+          {addKeyDialog}
+        </div>
+      </div>
+
+      {/* Which rows you are looking at: the language, and what narrows it.
+          The coverage readout sits here rather than with the title because it
+          is the selected language's, and changes when that select changes —
+          though not when the group or the search does, which count the whole
+          language. */}
+      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
         <Select
           value={language}
           onValueChange={(value) => setLanguage(value as LanguageCode)}
@@ -304,29 +389,17 @@ export function TranslationsPage() {
                 className="w-56 pl-8"
               />
             </div>
-          </>
-        )}
 
-        <div className="ml-auto flex items-center gap-3">
-          {hasKeys && (
-            <>
+            <div className="ml-auto flex items-center gap-3">
               <div className="w-40">
                 <Progress value={percent} />
               </div>
               <span className="text-muted-foreground text-sm tabular-nums">
                 {percent}% · {translatedCount}/{rows.length}
               </span>
-            </>
-          )}
-          {hasKeys && (
-            <ExportDialog
-              target={profile.path}
-              targetTitle={match.leaf.title}
-              language={language}
-            />
-          )}
-          {addKeyDialog}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <p className="text-muted-foreground border-b px-4 py-2 text-xs">
@@ -421,7 +494,15 @@ export function TranslationsPage() {
               "text-muted-foreground bg-muted/30 items-center gap-3 border-b px-4 py-1.5 text-[11px] tracking-wide uppercase"
             )}
           >
-            <span>Key and English</span>
+            <span className="flex items-center gap-2">
+              <Checkbox
+                checked={allFilteredSelected}
+                indeterminate={someFilteredSelected}
+                aria-label={`Select all ${filtered.length} keys in view`}
+                onCheckedChange={(checked) => handleSelectAll(checked === true)}
+              />
+              Key and English
+            </span>
             <span>{languageName}</span>
             <span className="hidden xl:block">Audit</span>
           </div>
@@ -448,11 +529,13 @@ export function TranslationsPage() {
                       value={value}
                       isDirty={row.key in edits}
                       isNew={row.origin === "manual"}
+                      isSelected={selected.has(row.key)}
                       language={language}
-                      onDelete={handleDelete}
                       profile={profile}
                       rtl={isRtl}
                       onChange={handleChange}
+                      onSelect={handleSelect}
+                      onDelete={(key) => setDoomed([key])}
                     />
                   </div>
                 )
@@ -461,6 +544,52 @@ export function TranslationsPage() {
           </div>
         </>
       )}
+
+      {/* Selecting rows and editing them are two jobs a translator does in the
+          same list, so the trays stack rather than replace each other: a
+          selection made before an edit is still there afterwards. */}
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div
+            className="bg-background flex items-center gap-3 border-t px-4 py-3"
+            variants={slideUpBar}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <span className="text-sm">
+              {selected.size} selected{" "}
+              {selected.size !== selectedInView && (
+                <span className="text-muted-foreground">
+                  ({selectedInView} in view)
+                </span>
+              )}
+            </span>
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={() => setSelected(new Set())}>
+                Clear
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setDoomed([...selected])}
+              >
+                <Trash2 data-icon="inline-start" />
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <DeleteKeysDialog
+        target={profile.path}
+        targetTitle={match.leaf.title}
+        language={language}
+        languageName={languageName}
+        keys={doomed}
+        onClose={() => setDoomed([])}
+        onDeleted={handleDeleted}
+      />
 
       {/* The tray slides up out of the bottom edge on the first edit and drops
           back out once everything is saved or discarded. */}

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ChevronRight, Languages, LayoutDashboard } from "lucide-react"
+import { ChevronRight, Languages, LayoutDashboard, Upload } from "lucide-react"
 import { Link, useLocation } from "react-router"
 
 import { navPath, navSections } from "@/config/nav_items"
@@ -67,6 +67,24 @@ export function AppSidebar() {
                 >
                   <LayoutDashboard />
                   <span>Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Transfer</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Import"
+                  isActive={pathname === "/import"}
+                  render={<Link to="/import" />}
+                >
+                  <Upload />
+                  <span>Import</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

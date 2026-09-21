@@ -12,15 +12,17 @@
  *   GET    /entries?target=&lang=    one app's keys, with status computed
  *   GET    /templates?target=&lang=  one channel's message templates, text included
  *   POST   /keys                     create a key in one app, in every language
- *   DELETE /keys?target=&key=        delete one app's key, every language
+ *   POST   /keys/delete              delete one app's keys, in one language or all
  *   PUT    /translations/:lang?target=
  *                                    save a batch of one app's translations
+ *   PUT    /import/:lang?target=     replace one app's language file wholesale
  *   POST   /export                   a .zip, one named file per language
  *   GET    /coverage                 per-language totals, every app
  *   POST   /reset                    re-seed from sample-data
  *
- * The key is passed as a query parameter rather than a path segment because
- * real keys contain slashes — `school_admin/campus_admin.inviteadmin.text`.
+ * Deleting is a POST with a body rather than a `DELETE /keys?key=`: real keys
+ * contain slashes — `school_admin/campus_admin.inviteadmin.text` — and a bulk
+ * selection is thousands of them, so they belong in a body either way.
  *
  * Two callers reach this: `server/mock_api.ts` mounts it on the Vite dev
  * server at `/api`, and `browser_backend.ts` calls it straight from the tab
@@ -30,7 +32,9 @@
 
 import type {
   CreateKeyRequest,
+  DeleteKeysRequest,
   ExportRequest,
+  ImportRequest,
   SaveTranslationsRequest,
 } from "../lib/api_types.ts"
 import { safeFileName } from "../lib/file_name.ts"
@@ -70,12 +74,31 @@ async function route(
     return json(201, store.createKey({ ...input, createdBy: author(input.createdBy) }))
   }
 
-  if (method === "DELETE" && path === "/keys") {
-    store.deleteKey(
-      required(query.get("target"), "target"),
-      required(query.get("key"), "key")
+  if (method === "POST" && path === "/keys/delete") {
+    const input = await body<DeleteKeysRequest>(request)
+
+    if (!input.target) {
+      throw new HttpError(400, `Missing "target"`)
+    }
+    if (!Array.isArray(input.keys) || input.keys.length === 0) {
+      throw new HttpError(400, "Pick at least one key to delete.")
+    }
+    if (input.scope !== "language" && input.scope !== "all") {
+      throw new HttpError(400, `Expected "scope" to be "language" or "all"`)
+    }
+    if (input.scope === "language" && !input.language) {
+      throw new HttpError(400, `Missing "language"`)
+    }
+
+    return json(
+      200,
+      store.deleteKeys({
+        target: input.target,
+        keys: input.keys,
+        scope: input.scope,
+        language: input.language,
+      })
     )
-    return empty()
   }
 
   if (method === "GET" && path === "/templates") {
@@ -110,6 +133,37 @@ async function route(
         required(query.get("target"), "target"),
         translations[1],
         input.values,
+        author(input.by)
+      )
+    )
+  }
+
+  const imported = /^\/import\/([A-Za-z-]+)$/.exec(path)
+  if (method === "PUT" && imported) {
+    const input = await body<ImportRequest>(request)
+
+    if (!input.values || typeof input.values !== "object") {
+      throw new HttpError(400, "Expected { values: { key: text } }")
+    }
+    // A file that reached here has been read and previewed in the browser, so
+    // a value that is not text is a caller bug rather than a bad upload — but
+    // the store writes straight to disk, so it is checked here all the same.
+    for (const [key, value] of Object.entries(input.values)) {
+      if (typeof value !== "string") {
+        throw new HttpError(400, `"${key}" is not text.`)
+      }
+    }
+    if (input.mode !== "replace" && input.mode !== "merge") {
+      throw new HttpError(400, `Expected "mode" to be "replace" or "merge"`)
+    }
+
+    return json(
+      200,
+      store.importBundle(
+        required(query.get("target"), "target"),
+        imported[1],
+        input.values,
+        input.mode,
         author(input.by)
       )
     )

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "context:map": "node scripts/build_context_map.mjs",
     "lint": "oxlint",
     "mock:reset": "node -e \"require('node:fs').rmSync('server-data',{recursive:true,force:true})\"",
     "preview": "vite preview"

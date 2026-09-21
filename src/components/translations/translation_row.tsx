@@ -9,6 +9,7 @@ import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { ContentKind, TargetProfile } from "@/config/target_profiles"
@@ -44,9 +45,12 @@ type TranslationRowProps = {
   language: LanguageCode
   profile: TargetProfile
   rtl?: boolean
+  /** In the page's delete selection — the checkbox beside the key. */
+  isSelected: boolean
   onChange: (key: string, value: string) => void
-  /** Only offered for keys added by hand — an imported key is the app's. */
-  onDelete?: (key: string) => void
+  onSelect: (key: string, selected: boolean) => void
+  /** Opens the delete dialog for this row alone. */
+  onDelete: (key: string) => void
 }
 
 /**
@@ -65,7 +69,9 @@ export function TranslationRow({
   language,
   profile,
   rtl,
+  isSelected,
   onChange,
+  onSelect,
   onDelete,
 }: TranslationRowProps) {
   const issues = checkTranslation(row.source, value, {
@@ -91,11 +97,18 @@ export function TranslationRow({
         ROW_GRID,
         "items-start gap-3 border-b px-4 py-3",
         isDirty && "bg-accent/40",
+        isSelected && "bg-destructive/5",
         hasError && "border-l-destructive border-l-2"
       )}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
+          <Checkbox
+            className="shrink-0"
+            checked={isSelected}
+            aria-label={`Select ${row.key}`}
+            onCheckedChange={(checked) => onSelect(row.key, checked === true)}
+          />
           <span className="text-muted-foreground truncate font-mono text-xs">
             {row.key}
           </span>
@@ -103,23 +116,20 @@ export function TranslationRow({
             {statusLabel[row.status]}
           </Badge>
           {isNew && (
-            <>
-              <Badge variant="secondary" className="shrink-0">
-                New
-              </Badge>
-              {onDelete && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-6 shrink-0"
-                  aria-label={`Delete ${row.key}`}
-                  onClick={() => onDelete(row.key)}
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
-              )}
-            </>
+            <Badge variant="secondary" className="shrink-0">
+              New
+            </Badge>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6 shrink-0"
+            aria-label={`Delete ${row.key}`}
+            title="Delete this key"
+            onClick={() => onDelete(row.key)}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
         </div>
         <div className="mt-1 flex items-start gap-2">
           <p className="text-sm">{row.source}</p>

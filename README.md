@@ -16,6 +16,19 @@ Base for the Localizer redesign — the replacement for the legacy CRA app in `.
 | Theming    | next-themes (`class` strategy, light/dark)        |
 | Lint       | oxlint                                            |
 
+## Context for agents
+
+`CLAUDE.md` is the entry point for Claude Code and anything else reading the
+repo: a router from a task to the files it touches, over
+`.claude/context/` — the architecture and its boundaries, the domain
+vocabulary, the conventions, and a map of every source file. The map is
+generated from the files' own header docblocks, so regenerate it when you add,
+move or delete one:
+
+```sh
+npm run context:map
+```
+
 ## Requirements
 
 Node 20+ (the repo pins **24** via `.nvmrc`). The machine default of Node 16 will not run Vite 8 or Tailwind v4.
@@ -32,6 +45,7 @@ npm run dev         # app on http://localhost:5173, mock API on /api
 npm run build       # tsc -b && vite build
 npm run preview     # serve the production build (mock API runs in the browser)
 npm run lint        # oxlint
+npm run context:map # regenerate .claude/context/file_map.md
 npm run mock:reset  # delete server-data/, re-seeded on the next request
 ```
 
@@ -122,8 +136,9 @@ once, and in that app only.
 | GET    | `/api/entries?target=&lang=`         | one app's keys, status computed            |
 | GET    | `/api/templates?target=&lang=`       | one channel's templates, text included      |
 | POST   | `/api/keys`                          | create a key in one app, in every language  |
-| DELETE | `/api/keys?target=&key=`             | delete one app's key, from every language   |
+| POST   | `/api/keys/delete`                   | delete one app's keys, in one language or all |
 | PUT    | `/api/translations/:lang?target=`    | save a batch of one app's translations      |
+| PUT    | `/api/import/:lang?target=`          | one app's language file, wholesale          |
 | POST   | `/api/export`                        | a .zip, one named file per language         |
 | GET    | `/api/coverage`                      | totals across every app, for the dashboard  |
 | POST   | `/api/reset`                         | re-seed from `sample-data`                  |

@@ -16,8 +16,13 @@ import type {
   CoverageResponse,
   CreateKeyRequest,
   CreateKeyResponse,
+  DeleteKeysRequest,
+  DeleteKeysResponse,
   EntriesResponse,
   ExportRequest,
+  ImportMode,
+  ImportRequest,
+  ImportResponse,
   SaveTranslationsRequest,
   SaveTranslationsResponse,
   TemplatesResponse,
@@ -140,8 +145,18 @@ export function createKey(input: CreateKeyRequest) {
   })
 }
 
-export function deleteKey(target: string, key: string) {
-  return request<void>(`/keys?${query({ target, key })}`, { method: "DELETE" })
+/**
+ * Removes keys from one app, one language or all of them — see `DeleteScope`.
+ *
+ * One call whether the screen is deleting a row or a selection of four
+ * thousand: a single key is a selection of one, and the server rewrites each
+ * language file once either way.
+ */
+export function deleteKeys(input: DeleteKeysRequest) {
+  return request<DeleteKeysResponse>("/keys/delete", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
 }
 
 export function saveTranslations(
@@ -159,6 +174,31 @@ export function saveTranslations(
       } satisfies SaveTranslationsRequest),
     }
   )
+}
+
+/**
+ * Replaces one app's language file with an uploaded one.
+ *
+ * Whole-file, unlike `saveTranslations` above: the browser has already shown
+ * the reviewer what it would change (`lib/bundle_diff.ts`) and this is the
+ * confirmation. The server applies the same rule to the same file rather than
+ * trusting a diff computed in the tab, so a key somebody edited while the
+ * preview was open cannot be written from a stale reading of it.
+ */
+export function importBundle(
+  target: string,
+  lang: LanguageCode,
+  values: Record<string, string>,
+  mode: ImportMode
+) {
+  return request<ImportResponse>(`/import/${lang}?${query({ target })}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      values,
+      mode,
+      by: currentUser.name,
+    } satisfies ImportRequest),
+  })
 }
 
 export function fetchCoverage() {

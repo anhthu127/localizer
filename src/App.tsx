@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/app_layout"
 import { MotionProvider } from "@/components/motion/motion_provider"
 import { Toaster } from "@/components/ui/sonner"
 import { DashboardPage } from "@/pages/dashboard_page"
+import { ImportPage } from "@/pages/import_page"
 import { TargetPage } from "@/pages/target_page"
 
 function App() {
@@ -15,6 +16,9 @@ function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<DashboardPage />} />
+              {/* Not under a target: the wizard asks which app, because a
+                  language file does not say which one it belongs to. */}
+              <Route path="import" element={<ImportPage />} />
               {/* `/web/school`, `/others/email`, … — one route per nav leaf.
                   `TargetPage` picks the screen from the target's content kind. */}
               <Route path=":sectionId/:leafId" element={<TargetPage />} />
