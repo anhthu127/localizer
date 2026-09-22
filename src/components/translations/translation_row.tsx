@@ -28,9 +28,11 @@ const statusLabel: Record<TranslationStatus, string> = {
   missing: "Missing",
 }
 
-const statusVariant: Record<TranslationStatus, "outline" | "default"> = {
-  translated: "outline",
-  missing: "default",
+const statusTone: Record<TranslationStatus, string> = {
+  translated:
+    "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  missing:
+    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
 }
 
 /** Above this, a source string is a sentence and wants a growing textarea. */
@@ -112,7 +114,10 @@ export function TranslationRow({
           <span className="text-muted-foreground truncate font-mono text-xs">
             {row.key}
           </span>
-          <Badge variant={statusVariant[row.status]} className="shrink-0">
+          <Badge
+            variant="outline"
+            className={cn("shrink-0", statusTone[row.status])}
+          >
             {statusLabel[row.status]}
           </Badge>
           {isNew && (

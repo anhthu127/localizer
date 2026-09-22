@@ -15,7 +15,7 @@ export function StatTile({ label, value, hint, icon: Icon }: StatTileProps) {
   return (
     <Card className="hover:border-foreground/20 transition-colors">
       <CardContent className="flex items-start gap-3">
-        <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+        <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
           <Icon className="size-4" />
         </div>
         <div className="min-w-0">

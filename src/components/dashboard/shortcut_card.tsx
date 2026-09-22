@@ -19,7 +19,7 @@ export function ShortcutCard({ section, leaf }: NavMatch) {
           className="hover:bg-muted/50 hover:border-foreground/20 h-full transition-colors"
         >
           <CardContent className="flex items-center gap-3">
-            <div className="bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110">
+            <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110">
               <leaf.icon className="size-4" />
             </div>
             <div className="min-w-0 flex-1">

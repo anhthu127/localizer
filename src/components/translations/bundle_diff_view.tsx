@@ -33,12 +33,15 @@ const kindLabel: Record<DiffKind, string> = {
   unchanged: "Unchanged",
 }
 
-const kindBadge: Record<DiffKind, "default" | "secondary" | "outline"> = {
-  new: "default",
-  added: "default",
-  changed: "default",
-  removed: "secondary",
-  unchanged: "outline",
+const kindTone: Record<DiffKind, string> = {
+  new: "border-primary/30 bg-primary/10 text-primary",
+  added:
+    "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  changed:
+    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  removed:
+    "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400",
+  unchanged: "",
 }
 
 /** Where a key sits in its group, counted the way `git` counts lines. */
@@ -352,7 +355,10 @@ function Hunk({
         <span className="min-w-0 flex-1 truncate text-xs italic">
           {entry.source}
         </span>
-        <Badge variant={kindBadge[entry.kind]} className="shrink-0">
+        <Badge
+          variant="outline"
+          className={cn("shrink-0", kindTone[entry.kind])}
+        >
           {kindLabel[entry.kind]}
         </Badge>
       </div>
