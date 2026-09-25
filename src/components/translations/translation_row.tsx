@@ -20,10 +20,11 @@ import {
 import type { ContentKind, TargetProfile } from "@/config/target_profiles"
 import { copyText } from "@/lib/clipboard"
 import { formatDateTime } from "@/lib/format_date"
-import type { LanguageCode } from "@/lib/locale_data"
-import type {
-  TranslationRow as Row,
-  TranslationStatus,
+import {
+  statusOf,
+  type LanguageCode,
+  type TranslationRow as Row,
+  type TranslationStatus,
 } from "@/lib/locale_data"
 import { cn } from "@/lib/utils"
 import { checkTranslation, smsInfo } from "@/lib/validation"
@@ -87,6 +88,8 @@ export function TranslationRow({
     maxLength: profile.maxLength,
   })
   const hasError = issues.some((issue) => issue.level === "error")
+  const isFallback =
+    value !== "" && statusOf(row.source, value, language) === "missing"
 
   const handleCopy = async () => {
     if (await copyText(row.source)) {
@@ -103,7 +106,7 @@ export function TranslationRow({
       className={cn(
         ROW_GRID,
         "group items-start gap-3 border-b px-4 py-3",
-        isDirty && "bg-accent/40",
+        isDirty && "bg-accent/40 border-l-primary border-l-2",
         isSelected && "bg-destructive/5",
         hasError && "border-l-destructive border-l-2"
       )}
@@ -126,9 +129,7 @@ export function TranslationRow({
             {statusLabel[row.status]}
           </Badge>
           {isNew && (
-            <Badge variant="secondary" className="shrink-0">
-              New
-            </Badge>
+            <Badge className="bg-primary/10 text-primary shrink-0">New</Badge>
           )}
           <Button
             variant="ghost"
@@ -175,6 +176,7 @@ export function TranslationRow({
           row={row}
           value={value}
           rtl={rtl}
+          isFallback={isFallback}
           onChange={onChange}
         />
         <Meter kind={profile.kind} source={row.source} value={value} />
@@ -223,7 +225,7 @@ function Audit({ row }: { row: Row }) {
       {updated ? (
         <>
           <span
-            className="text-foreground truncate tabular-nums"
+            className="truncate tabular-nums"
             title={updated.at}
           >
             {formatDateTime(updated.at)}
@@ -250,14 +252,24 @@ type EditorProps = {
   row: Row
   value: string
   rtl?: boolean
+  isFallback: boolean
   onChange: (key: string, value: string) => void
 }
+
+const FALLBACK = "text-muted-foreground border-dashed border-amber-500/50 italic"
 
 /**
  * Half the School bundle is under 15 characters, so a four-line textarea for
  * every row is mostly empty chrome. The control follows the source instead.
  */
-function Editor({ kind, row, value, rtl, onChange }: EditorProps) {
+function Editor({
+  kind,
+  row,
+  value,
+  rtl,
+  isFallback,
+  onChange,
+}: EditorProps) {
   const shared = {
     value,
     dir: rtl ? ("rtl" as const) : undefined,
@@ -268,17 +280,30 @@ function Editor({ kind, row, value, rtl, onChange }: EditorProps) {
   }
 
   if (kind === "sms") {
-    return <Input {...shared} className="font-normal" />
+    return (
+      <Input {...shared} className={cn("font-normal", isFallback && FALLBACK)} />
+    )
   }
 
   if (kind === "email") {
-    return <Textarea {...shared} className="min-h-40 resize-y font-mono text-xs" />
+    return (
+      <Textarea
+        {...shared}
+        className={cn(
+          "min-h-40 resize-y font-mono text-xs",
+          isFallback && FALLBACK
+        )}
+      />
+    )
   }
 
   return row.source.length <= SHORT_SOURCE ? (
-    <Input {...shared} />
+    <Input {...shared} className={cn(isFallback && FALLBACK)} />
   ) : (
-    <Textarea {...shared} className="min-h-16 resize-y" />
+    <Textarea
+      {...shared}
+      className={cn("min-h-16 resize-y", isFallback && FALLBACK)}
+    />
   )
 }
 

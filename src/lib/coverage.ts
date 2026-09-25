@@ -33,6 +33,12 @@ export function totalNeedsReview(coverage: CoverageResponse) {
 
 export type Tone = "bad" | "warn" | "good"
 
+export const toneText: Record<Tone, string> = {
+  bad: "text-destructive",
+  warn: "text-amber-600 dark:text-amber-500",
+  good: "text-emerald-600 dark:text-emerald-500",
+}
+
 /** Under half translated is behind, under nine in ten is under way. */
 export function toneOf(percent: number): Tone {
   return percent < 50 ? "bad" : percent < 90 ? "warn" : "good"

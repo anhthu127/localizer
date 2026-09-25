@@ -11,19 +11,13 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CoverageResponse } from "@/lib/api_types"
-import { issueCountOf, percentOf, toneOf, type Tone } from "@/lib/coverage"
+import { issueCountOf, percentOf, toneOf, toneText } from "@/lib/coverage"
 import { languages } from "@/lib/locale_data"
 import { cn } from "@/lib/utils"
 import { workspaceLink } from "@/lib/workspace_link"
 
 const nameOf = (code: string) =>
   languages.find((language) => language.code === code)?.name ?? code
-
-const toneText: Record<Tone, string> = {
-  bad: "text-destructive",
-  warn: "text-amber-600 dark:text-amber-500",
-  good: "text-emerald-600 dark:text-emerald-500",
-}
 
 type LanguageCoverageCardProps = {
   /** Null until the coverage request answers. */

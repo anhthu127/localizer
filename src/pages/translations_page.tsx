@@ -12,6 +12,7 @@ import {
   GroupFilter,
 } from "@/components/translations/group_filter"
 import { ExportDialog } from "@/components/translations/export_dialog"
+import { AnimatedProgress } from "@/components/motion/animated_progress"
 import { TargetProfileCard } from "@/components/translations/target_profile_card"
 import {
   ROW_GRID,
@@ -21,7 +22,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -34,6 +34,7 @@ import { findNavLeaf } from "@/config/nav_items"
 import { kindLabel, profileOf } from "@/config/target_profiles"
 import { useTranslationRows } from "@/hooks/use_translation_rows"
 import { messageOf, saveTranslations } from "@/lib/api"
+import { toneOf, toneText } from "@/lib/coverage"
 import { fadeIn, slideUpBar, transitions } from "@/lib/motion"
 import {
   groupOptionsOf,
@@ -398,7 +399,7 @@ export function TranslationsPage() {
                 >
                   {filter.label}
                   {filter.id === "issues" && needsReview.size > 0 && (
-                    <Badge variant="secondary" className="ml-1.5">
+                    <Badge className="ml-1.5 bg-amber-500/15 text-amber-700 dark:text-amber-400">
                       {needsReview.size}
                     </Badge>
                   )}
@@ -426,10 +427,15 @@ export function TranslationsPage() {
 
             <div className="flex items-center gap-2">
               <div className="w-24">
-                <Progress value={percent} />
+                <AnimatedProgress value={percent} tone={toneOf(percent)} />
               </div>
               <span className="text-muted-foreground text-xs tabular-nums">
-                {percent}% · {translatedCount}/{rows.length}
+                <span
+                  className={cn("font-semibold", toneText[toneOf(percent)])}
+                >
+                  {percent}%
+                </span>{" "}
+                · {translatedCount}/{rows.length}
               </span>
             </div>
           </>

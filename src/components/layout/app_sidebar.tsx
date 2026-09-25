@@ -139,7 +139,7 @@ export function AppSidebar() {
                                 <span>{item.title}</span>
                               </SidebarMenuSubButton>
                               {item.count ? (
-                                <SidebarMenuBadge>
+                                <SidebarMenuBadge className="top-1/2 -translate-y-1/2">
                                   {item.count}
                                 </SidebarMenuBadge>
                               ) : null}
