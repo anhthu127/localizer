@@ -38,6 +38,7 @@ import { toneOf, toneText } from "@/lib/coverage"
 import { fadeIn, slideUpBar, transitions } from "@/lib/motion"
 import {
   groupOptionsOf,
+  languageNames,
   languages,
   type LanguageCode,
   type TranslationRow as Row,
@@ -355,6 +356,7 @@ export function TranslationsPage() {
           language. */}
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
         <Select
+          items={languageNames}
           value={language}
           onValueChange={(value) => setLanguage(value as LanguageCode)}
         >
@@ -470,13 +472,13 @@ export function TranslationsPage() {
       )}
 
       {!isLoading && !error && hasKeys && (
-        <>
+        <div className="m-4 flex min-h-0 flex-1 flex-col bg-card ring-foreground/10 overflow-hidden rounded-xl ring-1">
           {/* The list is virtualized, so the header cannot be a table header —
               it is the same grid as the row, sitting above the scroller. */}
           <div
             className={cn(
               ROW_GRID,
-              "text-muted-foreground bg-muted/30 items-center gap-3 border-b px-4 py-1.5 text-[11px] tracking-wide uppercase"
+              "text-muted-foreground bg-muted items-center gap-3 border-b px-4 py-1.5 text-[11px] tracking-wide uppercase"
             )}
           >
             <span className="flex items-center gap-2">
@@ -527,7 +529,7 @@ export function TranslationsPage() {
               })}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Selecting rows and editing them are two jobs a translator does in the

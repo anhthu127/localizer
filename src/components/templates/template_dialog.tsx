@@ -15,6 +15,7 @@ import {
 import type { TargetProfile } from "@/config/target_profiles"
 import { findNavLeaf } from "@/config/nav_items"
 import { messageOf, saveTranslations } from "@/lib/api"
+import { toneOf, toneText } from "@/lib/coverage"
 import {
   languages,
   SOURCE_LANGUAGE,
@@ -85,6 +86,9 @@ export function TemplateDialog({
     edits[field] ?? fields.find((item) => item.field === field)?.target ?? ""
 
   const dirtyFields = Object.keys(edits) as TemplateFieldId[]
+  const percent = entry.total
+    ? Math.round((entry.translated / entry.total) * 100)
+    : 0
 
   const handleChange = (field: TemplateFieldId, value: string) => {
     setEdits((current) => ({ ...current, [field]: value }))
@@ -227,9 +231,18 @@ export function TemplateDialog({
 
         <footer className="bg-muted/50 flex items-center gap-3 border-t px-4 py-3">
           <span className="text-muted-foreground text-sm">
-            {dirtyFields.length > 0
-              ? `${dirtyFields.length} unsaved ${dirtyFields.length === 1 ? "field" : "fields"}`
-              : `${entry.translated} of ${entry.total} fields translated`}
+            {dirtyFields.length > 0 ? (
+              `${dirtyFields.length} unsaved ${dirtyFields.length === 1 ? "field" : "fields"}`
+            ) : (
+              <>
+                <span
+                  className={cn("font-semibold", toneText[toneOf(percent)])}
+                >
+                  {entry.translated} of {entry.total}
+                </span>{" "}
+                fields translated
+              </>
+            )}
           </span>
           <div className="ml-auto flex gap-2">
             <Button

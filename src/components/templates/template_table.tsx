@@ -1,8 +1,8 @@
 import { AlertTriangle, ChevronRight, Globe, Smartphone } from "lucide-react"
 import { Link } from "react-router"
 
+import { AnimatedProgress } from "@/components/motion/animated_progress"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { findNavLeaf } from "@/config/nav_items"
+import { toneOf, toneText } from "@/lib/coverage"
 import { cn } from "@/lib/utils"
 import {
   categoryLabel,
@@ -53,7 +54,7 @@ export function TemplateTable({
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="bg-muted hover:bg-muted">
           <TableHead>Template</TableHead>
           <TableHead className="w-32">Category</TableHead>
           <TableHead className="w-56">Sent from</TableHead>
@@ -68,12 +69,18 @@ export function TemplateTable({
         {entries.map((entry) => {
           const { template } = entry
           const isOpen = template.id === openId
+          const needsWork = entry.translated < entry.total || entry.needsReview > 0
 
           return (
             <TableRow
               key={template.id}
               onClick={() => onOpen(template.id)}
-              className={cn("cursor-pointer", isOpen && "bg-accent/50")}
+              className={cn(
+                "cursor-pointer",
+                needsWork && "shadow-[inset_2px_0_0_var(--color-amber-500)]",
+                isOpen &&
+                  "bg-accent/50 shadow-[inset_2px_0_0_var(--color-primary)]"
+              )}
             >
               <TableCell>
                 <button
@@ -186,12 +193,21 @@ function TranslationCell({ entry }: { entry: TemplateEntry }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Progress value={percent} className="w-20" />
-      <span className="text-muted-foreground text-xs tabular-nums">
+      <AnimatedProgress
+        value={percent}
+        tone={toneOf(percent)}
+        className="w-20"
+      />
+      <span
+        className={cn(
+          "text-xs font-medium tabular-nums",
+          toneText[toneOf(percent)]
+        )}
+      >
         {entry.translated}/{entry.total}
       </span>
       {entry.needsReview > 0 && (
-        <Badge variant="outline" className="gap-1">
+        <Badge className="gap-1 bg-amber-500/15 text-amber-700 dark:text-amber-400">
           <AlertTriangle className="size-3" />
           {entry.needsReview}
         </Badge>

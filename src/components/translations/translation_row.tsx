@@ -20,11 +20,10 @@ import {
 import type { ContentKind, TargetProfile } from "@/config/target_profiles"
 import { copyText } from "@/lib/clipboard"
 import { formatDateTime } from "@/lib/format_date"
-import {
-  statusOf,
-  type LanguageCode,
-  type TranslationRow as Row,
-  type TranslationStatus,
+import type { LanguageCode } from "@/lib/locale_data"
+import type {
+  TranslationRow as Row,
+  TranslationStatus,
 } from "@/lib/locale_data"
 import { cn } from "@/lib/utils"
 import { checkTranslation, smsInfo } from "@/lib/validation"
@@ -88,8 +87,7 @@ export function TranslationRow({
     maxLength: profile.maxLength,
   })
   const hasError = issues.some((issue) => issue.level === "error")
-  const isFallback =
-    value !== "" && statusOf(row.source, value, language) === "missing"
+  const hasWarning = issues.some((issue) => issue.level === "warning")
 
   const handleCopy = async () => {
     if (await copyText(row.source)) {
@@ -105,7 +103,11 @@ export function TranslationRow({
     <div
       className={cn(
         ROW_GRID,
-        "group items-start gap-3 border-b px-4 py-3",
+        "group items-start gap-3 border-b px-4 py-3 transition-colors",
+        !isDirty &&
+          !isSelected &&
+          "hover:bg-muted/40 focus-within:bg-accent/40",
+        hasWarning && "border-l-2 border-l-amber-500",
         isDirty && "bg-accent/40 border-l-primary border-l-2",
         isSelected && "bg-destructive/5",
         hasError && "border-l-destructive border-l-2"
@@ -143,7 +145,7 @@ export function TranslationRow({
           </Button>
         </div>
         <div className="mt-1 flex items-start gap-2">
-          <p className="text-sm">{row.source}</p>
+          <p className="text-sm font-medium">{row.source}</p>
           {/* Two different things a translator wants from the English, and one
               button used to do the second while its icon promised the first:
               take it away to a CAT tool, or drop it in as the starting point. */}
@@ -176,7 +178,6 @@ export function TranslationRow({
           row={row}
           value={value}
           rtl={rtl}
-          isFallback={isFallback}
           onChange={onChange}
         />
         <Meter kind={profile.kind} source={row.source} value={value} />
@@ -252,24 +253,14 @@ type EditorProps = {
   row: Row
   value: string
   rtl?: boolean
-  isFallback: boolean
   onChange: (key: string, value: string) => void
 }
-
-const FALLBACK = "text-muted-foreground border-dashed border-amber-500/50 italic"
 
 /**
  * Half the School bundle is under 15 characters, so a four-line textarea for
  * every row is mostly empty chrome. The control follows the source instead.
  */
-function Editor({
-  kind,
-  row,
-  value,
-  rtl,
-  isFallback,
-  onChange,
-}: EditorProps) {
+function Editor({ kind, row, value, rtl, onChange }: EditorProps) {
   const shared = {
     value,
     dir: rtl ? ("rtl" as const) : undefined,
@@ -280,30 +271,17 @@ function Editor({
   }
 
   if (kind === "sms") {
-    return (
-      <Input {...shared} className={cn("font-normal", isFallback && FALLBACK)} />
-    )
+    return <Input {...shared} className="font-normal" />
   }
 
   if (kind === "email") {
-    return (
-      <Textarea
-        {...shared}
-        className={cn(
-          "min-h-40 resize-y font-mono text-xs",
-          isFallback && FALLBACK
-        )}
-      />
-    )
+    return <Textarea {...shared} className="min-h-40 resize-y font-mono text-xs" />
   }
 
   return row.source.length <= SHORT_SOURCE ? (
-    <Input {...shared} className={cn(isFallback && FALLBACK)} />
+    <Input {...shared} />
   ) : (
-    <Textarea
-      {...shared}
-      className={cn("min-h-16 resize-y", isFallback && FALLBACK)}
-    />
+    <Textarea {...shared} className="min-h-16 resize-y" />
   )
 }
 

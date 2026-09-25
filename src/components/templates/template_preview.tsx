@@ -53,7 +53,7 @@ type PreviewProps = {
 /** An empty field previews as its own name in grey, not as a hole. */
 function Placeholder({ label }: { label: string }) {
   return (
-    <span className="text-muted-foreground/60 italic">
+    <span className="text-amber-600 italic dark:text-amber-500">
       {label} not translated yet
     </span>
   )

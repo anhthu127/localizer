@@ -21,7 +21,11 @@ import {
 } from "@/components/ui/select"
 import type { CoverageResponse } from "@/lib/api_types"
 import { coverageOf, toneOf } from "@/lib/coverage"
-import { languages, type LanguageCode } from "@/lib/locale_data"
+import {
+  languageNames,
+  languages,
+  type LanguageCode,
+} from "@/lib/locale_data"
 import { workspaceLink } from "@/lib/workspace_link"
 
 type GapsCardProps = {
@@ -47,6 +51,7 @@ export function GapsCard({ coverage }: GapsCardProps) {
         </CardDescription>
         <CardAction>
           <Select
+            items={languageNames}
             value={language}
             onValueChange={(value) => setLanguage(value as LanguageCode)}
           >

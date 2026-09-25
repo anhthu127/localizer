@@ -52,6 +52,11 @@ export const languages: Language[] = [
   { code: "km", name: "Khmer" },
 ]
 
+/** `{ vi: "Vietnamese", … }` — what a select shows for its value. */
+export const languageNames: Record<string, string> = Object.fromEntries(
+  languages.map((item) => [item.code, item.name])
+)
+
 /** One language file: `{ "group.sub.key": "value", … }`. */
 export type LocaleBundle = Record<string, string>
 
