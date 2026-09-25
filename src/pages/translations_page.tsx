@@ -147,8 +147,6 @@ export function TranslationsPage() {
     return flagged
   }, [rows, language, profile.lengthBudget, profile.maxLength])
 
-  const newCount = rows.filter((row) => row.origin === "manual").length
-
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
 
@@ -390,67 +388,53 @@ export function TranslationsPage() {
               />
             </div>
 
-            <div className="ml-auto flex items-center gap-3">
-              <div className="w-40">
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {statusFilters.map((filter) => (
+                <Button
+                  key={filter.id}
+                  size="sm"
+                  variant={status === filter.id ? "default" : "outline"}
+                  onClick={() => setStatus(filter.id)}
+                >
+                  {filter.label}
+                  {filter.id === "issues" && needsReview.size > 0 && (
+                    <Badge variant="secondary" className="ml-1.5">
+                      {needsReview.size}
+                    </Badge>
+                  )}
+                </Button>
+              ))}
+              <Badge variant="outline" className="ml-2">
+                {/* Keyed so the count crossfades when a filter narrows the list,
+                    instead of the digits flicking over in place. */}
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={filtered.length}
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    transition={transitions.fast}
+                    className="tabular-nums"
+                  >
+                    {filtered.length}
+                  </motion.span>
+                </AnimatePresence>
+                &nbsp;keys
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-24">
                 <Progress value={percent} />
               </div>
-              <span className="text-muted-foreground text-sm tabular-nums">
+              <span className="text-muted-foreground text-xs tabular-nums">
                 {percent}% · {translatedCount}/{rows.length}
               </span>
             </div>
           </>
         )}
       </div>
-
-      {hasKeys && (
-        <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
-          {statusFilters.map((filter) => (
-            <Button
-              key={filter.id}
-              size="sm"
-              variant={status === filter.id ? "default" : "outline"}
-              onClick={() => setStatus(filter.id)}
-            >
-              {filter.label}
-              {filter.id === "issues" && needsReview.size > 0 && (
-                <Badge variant="secondary" className="ml-1.5">
-                  {needsReview.size}
-                </Badge>
-              )}
-            </Button>
-          ))}
-          {newCount > 0 && (
-            <Button
-              size="sm"
-              variant={status === "new" ? "default" : "outline"}
-              onClick={() => setStatus("new")}
-            >
-              Added here
-              <Badge variant="secondary" className="ml-1.5">
-                {newCount}
-              </Badge>
-            </Button>
-          )}
-          <Badge variant="outline" className="ml-2">
-            {/* Keyed so the count crossfades when a filter narrows the list,
-                instead of the digits flicking over in place. */}
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={filtered.length}
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                transition={transitions.fast}
-                className="tabular-nums"
-              >
-                {filtered.length}
-              </motion.span>
-            </AnimatePresence>
-            &nbsp;keys
-          </Badge>
-        </div>
-      )}
 
       {error && (
         <div className="text-destructive p-4 text-sm">

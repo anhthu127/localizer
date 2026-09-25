@@ -12,6 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import type { ContentKind, TargetProfile } from "@/config/target_profiles"
 import { copyText } from "@/lib/clipboard"
 import { formatDateTime } from "@/lib/format_date"
@@ -97,7 +102,7 @@ export function TranslationRow({
     <div
       className={cn(
         ROW_GRID,
-        "items-start gap-3 border-b px-4 py-3",
+        "group items-start gap-3 border-b px-4 py-3",
         isDirty && "bg-accent/40",
         isSelected && "bg-destructive/5",
         hasError && "border-l-destructive border-l-2"
@@ -144,7 +149,7 @@ export function TranslationRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-6 shrink-0"
+            className="size-6 shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
             aria-label={`Copy the English for ${row.key} to the clipboard`}
             title="Copy to clipboard"
             onClick={handleCopy}
@@ -154,7 +159,7 @@ export function TranslationRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-6 shrink-0"
+            className="size-6 shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
             aria-label={`Paste the English for ${row.key} into the translation`}
             title="Paste into the translation"
             onClick={() => onChange(row.key, row.source)}
@@ -201,62 +206,42 @@ export function TranslationRow({
 /**
  * The row's grid, shared with the header above the list so the two line up.
  * The audit column is the first thing to go when the window narrows: on a
- * laptop the editor is worth more than the provenance, and the same facts are
- * in the row's title attributes either way.
+ * laptop the editor is worth more than the provenance.
  */
 export const ROW_GRID =
-  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_13rem]"
+  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_9rem]"
 
 /**
- * Who added the key and who last wrote this language's value.
- *
- * The legacy app recorded neither, so a wrong string was a question nobody
- * could answer — hence the column. Four labelled facts rather than two stamps:
- * a reviewer reads down the label column looking for one of them, and
- * "Updated at" says what it is without being learned first.
- *
- * The updated pair is empty only while the value is — text that came in with
- * the import is stamped with the import rather than left blank.
+ * When this language's value was last written; who wrote it is one hover away.
+ * Empty only while the value is — imported text is stamped with the import.
  */
 function Audit({ row }: { row: Row }) {
-  return (
-    <dl className="text-muted-foreground hidden min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-2 gap-y-0.5 text-xs xl:grid">
-      <Fact label="Created by" value={row.created.by} />
-      <Fact label="Created at" value={row.created.at} isInstant />
-      <Fact label="Updated by" value={row.updated?.by} />
-      <Fact label="Updated at" value={row.updated?.at} isInstant />
-    </dl>
-  )
-}
+  const updated = row.updated
 
-/**
- * `isInstant` marks the value as an ISO timestamp: it is read out in the
- * team's fixed format, and the exact instant stays in the tooltip for anyone
- * comparing two rows to the second.
- */
-function Fact({
-  label,
-  value,
-  isInstant,
-}: {
-  label: string
-  value?: string
-  isInstant?: boolean
-}) {
   return (
-    <>
-      <dt className="shrink-0 text-[10px] tracking-wide uppercase">{label}</dt>
-      {value === undefined ? (
-        <dd>—</dd>
+    <div className="text-muted-foreground hidden min-w-0 items-center gap-1.5 text-xs xl:flex">
+      {updated ? (
+        <>
+          <span
+            className="text-foreground truncate tabular-nums"
+            title={updated.at}
+          >
+            {formatDateTime(updated.at)}
+          </span>
+          <Tooltip>
+            <TooltipTrigger
+              aria-label="Updated by"
+              className="hover:text-foreground shrink-0"
+            >
+              <Info className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>Updated by {updated.by}</TooltipContent>
+          </Tooltip>
+        </>
       ) : (
-        <dd
-          className={cn("text-foreground truncate", isInstant && "tabular-nums")}
-          title={value}
-        >
-          {isInstant ? formatDateTime(value) : value}
-        </dd>
+        <span>—</span>
       )}
-    </>
+    </div>
   )
 }
 

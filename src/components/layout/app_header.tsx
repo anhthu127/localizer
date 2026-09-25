@@ -1,8 +1,7 @@
-import { ChevronRight, Search } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { Link, useLocation } from "react-router"
 
 import { ThemeToggle } from "@/components/theme_toggle"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { findNavLeaf } from "@/config/nav_items"
@@ -39,10 +38,6 @@ export function AppHeader() {
         )}
       </nav>
       <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden sm:block">
-          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <Input placeholder="Search keys…" className="w-56 pl-8" />
-        </div>
         <ThemeToggle />
       </div>
     </header>
