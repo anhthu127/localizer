@@ -2,11 +2,19 @@ import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
 import { motion, useReducedMotion } from "motion/react"
 
 import { ProgressTrack } from "@/components/ui/progress"
+import type { Tone } from "@/lib/coverage"
 import { easeOut } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
+const toneClass: Record<Tone, string> = {
+  bad: "bg-destructive",
+  warn: "bg-amber-500",
+  good: "bg-emerald-500",
+}
+
 type AnimatedProgressProps = {
   value: number
+  tone?: Tone
   className?: string
 }
 
@@ -18,7 +26,7 @@ type AnimatedProgressProps = {
  * for a motion element, because a width cannot be tweened from a stylesheet
  * without React state in between.
  */
-export function AnimatedProgress({ value, className }: AnimatedProgressProps) {
+export function AnimatedProgress({ value, tone, className }: AnimatedProgressProps) {
   const prefersReducedMotion = useReducedMotion()
   const width = `${Math.max(0, Math.min(100, value))}%`
 
@@ -31,7 +39,10 @@ export function AnimatedProgress({ value, className }: AnimatedProgressProps) {
       <ProgressTrack>
         <motion.div
           data-slot="progress-indicator"
-          className="bg-primary h-full rounded-full"
+          className={cn(
+            "h-full rounded-full",
+            tone ? toneClass[tone] : "bg-primary"
+          )}
           initial={{ width: prefersReducedMotion ? width : 0 }}
           animate={{ width }}
           transition={{ duration: 0.7, ease: easeOut }}

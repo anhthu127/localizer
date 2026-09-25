@@ -30,3 +30,10 @@ export function totalNeedsReview(coverage: CoverageResponse) {
     0
   )
 }
+
+export type Tone = "bad" | "warn" | "good"
+
+/** Under half translated is behind, under nine in ten is under way. */
+export function toneOf(percent: number): Tone {
+  return percent < 50 ? "bad" : percent < 90 ? "warn" : "good"
+}

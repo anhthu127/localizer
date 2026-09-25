@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { CoverageResponse } from "@/lib/api_types"
-import { coverageOf } from "@/lib/coverage"
+import { coverageOf, toneOf } from "@/lib/coverage"
 import { languages, type LanguageCode } from "@/lib/locale_data"
 import { workspaceLink } from "@/lib/workspace_link"
 
@@ -80,12 +80,16 @@ export function GapsCard({ coverage }: GapsCardProps) {
                   <div className="flex items-baseline gap-2 text-sm">
                     <span className="truncate font-medium">{group.group}</span>
                     <ArrowUpRight className="text-muted-foreground size-3.5 shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
-                    <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+                    <span className="ml-auto text-xs font-medium text-amber-600 tabular-nums dark:text-amber-500">
                       {group.needsReview.toLocaleString()} of {group.total} to
                       review
                     </span>
                   </div>
-                  <AnimatedProgress value={percent} className="mt-1.5" />
+                  <AnimatedProgress
+                    value={percent}
+                    tone={toneOf(percent)}
+                    className="mt-1.5"
+                  />
                 </Link>
               </StaggerItem>
             )
