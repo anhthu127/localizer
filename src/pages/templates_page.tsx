@@ -21,7 +21,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { findNavLeaf } from "@/config/nav_items"
 import { kindLabel, profileOf } from "@/config/target_profiles"
 import { useTemplates } from "@/hooks/use_templates"
-import { languages, type LanguageCode } from "@/lib/locale_data"
+import {
+  languages,
+  SOURCE_LANGUAGE,
+  type LanguageCode,
+} from "@/lib/locale_data"
 import {
   categoryLabel,
   channelLabel,
@@ -130,6 +134,7 @@ export function TemplatesPage() {
 
   const totals = useMemo(() => summarise(filtered), [filtered])
   const open = templates.find((entry) => entry.template.id === openId)
+  const isSource = language === SOURCE_LANGUAGE
 
   if (!match) {
     return <Navigate to="/" replace />
@@ -212,7 +217,7 @@ export function TemplatesPage() {
         )}
 
         <div className="ml-auto flex items-center gap-3">
-          {templates.length > 0 && (
+          {templates.length > 0 && !isSource && (
             <>
               <div className="w-40">
                 <Progress value={totals.percent} />
@@ -226,6 +231,11 @@ export function TemplatesPage() {
                   {totals.needsReview} to review
                 </Badge>
               )}
+            </>
+          )}
+          {templates.length > 0 && (
+            <>
+              {isSource && <Badge variant="secondary">View only</Badge>}
               <Badge variant="outline">
                 {filtered.length}{" "}
                 {filtered.length === 1 ? "template" : "templates"}
@@ -274,6 +284,7 @@ export function TemplatesPage() {
             channel={channel}
             entries={filtered}
             openId={openId ?? undefined}
+            showProgress={!isSource}
             onOpen={(id) => setParam("template", id)}
           />
           {filtered.length === 0 && (

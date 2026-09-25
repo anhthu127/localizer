@@ -117,6 +117,10 @@ and coverage all work on it unchanged, and the translate dialog saves through
 - `templates.json` holds only what a key cannot carry: name, **category** (who
   receives it), **owner** (which product sends it), and who created it.
 - **Category** and **owner** are labels on the template, not on the keys.
+- **English is view only.** Templates come from the API and cannot be edited
+  or created here, so every language is anchored to their English. With English
+  selected, the dialog shows the source without an editor or a Save button, and
+  the page hides the translation progress.
 
 The mail body is rich text. Both the editor's output and the preview's input go
 through the whitelist in `lib/template_preview.ts` — the editor _unwraps_ what

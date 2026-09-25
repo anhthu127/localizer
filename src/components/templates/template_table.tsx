@@ -28,6 +28,7 @@ type TemplateTableProps = {
   entries: TemplateEntry[]
   /** The template whose dialog is open, so the row can stay highlighted. */
   openId?: string
+  showProgress: boolean
   onOpen: (id: string) => void
 }
 
@@ -48,6 +49,7 @@ export function TemplateTable({
   channel,
   entries,
   openId,
+  showProgress,
   onOpen,
 }: TemplateTableProps) {
   return (
@@ -61,7 +63,9 @@ export function TemplateTable({
           {channel === "sms" && (
             <TableHead className="w-32 text-right">Segments</TableHead>
           )}
-          <TableHead className="w-56">Translation</TableHead>
+          {showProgress && (
+            <TableHead className="w-56">Translation</TableHead>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -119,9 +123,11 @@ export function TemplateTable({
                 </TableCell>
               )}
 
-              <TableCell>
-                <TranslationCell entry={entry} />
-              </TableCell>
+              {showProgress && (
+                <TableCell>
+                  <TranslationCell entry={entry} />
+                </TableCell>
+              )}
             </TableRow>
           )
         })}

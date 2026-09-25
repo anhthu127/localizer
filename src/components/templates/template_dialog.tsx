@@ -74,8 +74,9 @@ export function TemplateDialog({
   const languageName =
     languages.find((item) => item.code === language)?.name ?? language
   const isRtl = languages.find((item) => item.code === language)?.rtl ?? false
-  // Editing English is editing the source itself: the toggle would offer the
-  // same text under two labels, so the preview keeps one.
+  // Templates come from the API and every language is anchored to their
+  // English, so English is viewed, never edited — and the preview toggle
+  // would offer the same text under two labels, so it keeps one.
   const isSource = language === SOURCE_LANGUAGE
   const previewMode: PreviewMode = isSource ? "target" : mode
   const leaf = findNavLeaf(template.owner.kind, template.owner.app)
@@ -150,7 +151,10 @@ export function TemplateDialog({
           </span>
           <DialogDescription className="sr-only">
             <span className="font-mono">{ownerPath(template.owner)}</span> ·
-            created by {template.createdBy} · translating into {languageName}
+            created by {template.createdBy} ·{" "}
+            {isSource
+              ? "English source, view only"
+              : `translating into ${languageName}`}
           </DialogDescription>
         </header>
 
@@ -168,6 +172,7 @@ export function TemplateDialog({
                 language={language}
                 profile={profile}
                 rtl={isRtl}
+                readOnly={isSource}
                 onChange={handleChange}
               />
             ))}
@@ -226,11 +231,13 @@ export function TemplateDialog({
         </div>
 
         <footer className="bg-muted/50 flex items-center gap-3 border-t px-4 py-3">
-          <span className="text-muted-foreground text-sm">
-            {dirtyFields.length > 0
-              ? `${dirtyFields.length} unsaved ${dirtyFields.length === 1 ? "field" : "fields"}`
-              : `${entry.translated} of ${entry.total} fields translated`}
-          </span>
+          {!isSource && (
+            <span className="text-muted-foreground text-sm">
+              {dirtyFields.length > 0
+                ? `${dirtyFields.length} unsaved ${dirtyFields.length === 1 ? "field" : "fields"}`
+                : `${entry.translated} of ${entry.total} fields translated`}
+            </span>
+          )}
           <div className="ml-auto flex gap-2">
             <Button
               variant="outline"
@@ -239,12 +246,14 @@ export function TemplateDialog({
             >
               {dirtyFields.length > 0 ? "Discard" : "Close"}
             </Button>
-            <Button
-              disabled={isSaving || dirtyFields.length === 0}
-              onClick={handleSave}
-            >
-              {isSaving ? "Saving…" : "Save"}
-            </Button>
+            {!isSource && (
+              <Button
+                disabled={isSaving || dirtyFields.length === 0}
+                onClick={handleSave}
+              >
+                {isSaving ? "Saving…" : "Save"}
+              </Button>
+            )}
           </div>
         </footer>
       </DialogContent>
