@@ -29,6 +29,7 @@ type TemplateTableProps = {
   entries: TemplateEntry[]
   /** The template whose dialog is open, so the row can stay highlighted. */
   openId?: string
+  showProgress: boolean
   onOpen: (id: string) => void
 }
 
@@ -49,6 +50,7 @@ export function TemplateTable({
   channel,
   entries,
   openId,
+  showProgress,
   onOpen,
 }: TemplateTableProps) {
   return (
@@ -62,14 +64,18 @@ export function TemplateTable({
           {channel === "sms" && (
             <TableHead className="w-32 text-right">Segments</TableHead>
           )}
-          <TableHead className="w-56">Translation</TableHead>
+          {showProgress && (
+            <TableHead className="w-56">Translation</TableHead>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
         {entries.map((entry) => {
           const { template } = entry
           const isOpen = template.id === openId
-          const needsWork = entry.translated < entry.total || entry.needsReview > 0
+          const needsWork =
+            showProgress &&
+            (entry.translated < entry.total || entry.needsReview > 0)
 
           return (
             <TableRow
@@ -126,9 +132,11 @@ export function TemplateTable({
                 </TableCell>
               )}
 
-              <TableCell>
-                <TranslationCell entry={entry} />
-              </TableCell>
+              {showProgress && (
+                <TableCell>
+                  <TranslationCell entry={entry} />
+                </TableCell>
+              )}
             </TableRow>
           )
         })}

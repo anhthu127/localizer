@@ -35,6 +35,7 @@ type TemplateFieldEditorProps = {
   language: LanguageCode
   profile: TargetProfile
   rtl?: boolean
+  readOnly?: boolean
   onChange: (field: TemplateField["id"], value: string) => void
 }
 
@@ -58,6 +59,7 @@ export function TemplateFieldEditor({
   language,
   profile,
   rtl,
+  readOnly = false,
   onChange,
 }: TemplateFieldEditorProps) {
   // Rich fields open as an editor; the raw markup stays one click away, for
@@ -71,7 +73,8 @@ export function TemplateFieldEditor({
     maxLength: field.maxLength,
     format: field.format,
   })
-  const hasError = issues.some((issue) => issue.level === "error")
+  const hasError =
+    !readOnly && issues.some((issue) => issue.level === "error")
 
   const handleCopy = async () => {
     if (await copyText(value.source)) {
@@ -102,7 +105,7 @@ export function TemplateFieldEditor({
     >
       <div className="flex items-center gap-2">
         <h4 className="text-sm font-medium">{field.label}</h4>
-        {!current && (
+        {!readOnly && !current && (
           <Badge
             variant="outline"
             className="shrink-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
@@ -141,16 +144,18 @@ export function TemplateFieldEditor({
           >
             <Copy className="size-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6"
-            aria-label={`Paste the English ${field.label.toLowerCase()} into the translation`}
-            title="Paste into the translation"
-            onClick={() => onChange(field.id, value.source)}
-          >
-            <ClipboardPaste className="size-3.5" />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              aria-label={`Paste the English ${field.label.toLowerCase()} into the translation`}
+              title="Paste into the translation"
+              onClick={() => onChange(field.id, value.source)}
+            >
+              <ClipboardPaste className="size-3.5" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -174,29 +179,39 @@ export function TemplateFieldEditor({
         </p>
       )}
 
-      <div className="mt-2">
-        {field.control === "line" && <Input {...shared} />}
+      {!readOnly && (
+        <div className="mt-2">
+          {field.control === "line" && <Input {...shared} />}
 
-        {field.control === "paragraph" && (
-          <Textarea {...shared} className="min-h-20 resize-y" />
-        )}
+          {field.control === "paragraph" && (
+            <Textarea {...shared} className="min-h-20 resize-y" />
+          )}
 
-        {field.control === "rich" &&
-          (showSource ? (
-            <Textarea {...shared} className="min-h-52 resize-y font-mono text-xs" />
-          ) : (
-            <RichTextEditor
-              value={current}
-              rtl={rtl}
-              ariaLabel={`${field.label} translation`}
-              onChange={(next) => onChange(field.id, next)}
-            />
-          ))}
-      </div>
+          {field.control === "rich" &&
+            (showSource ? (
+              <Textarea
+                {...shared}
+                className="min-h-52 resize-y font-mono text-xs"
+              />
+            ) : (
+              <RichTextEditor
+                value={current}
+                rtl={rtl}
+                ariaLabel={`${field.label} translation`}
+                onChange={(next) => onChange(field.id, next)}
+              />
+            ))}
+        </div>
+      )}
 
       <div className="mt-1.5 flex flex-col gap-1">
-        <Meter channel={channel} field={field} value={value} current={current} />
-        {issues.map((issue) => (
+        <Meter
+          channel={channel}
+          field={field}
+          value={value}
+          current={readOnly ? value.source : current}
+        />
+        {!readOnly && issues.map((issue) => (
           <p
             key={issue.id}
             className={cn(
