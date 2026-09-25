@@ -5,6 +5,7 @@ import { Lift } from "@/components/motion/lift"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { navPath, type NavMatch } from "@/config/nav_items"
+import { cn } from "@/lib/utils"
 
 /** One nav leaf as a jump-in tile. The whole card is the link. */
 export function ShortcutCard({ section, leaf }: NavMatch) {
@@ -16,7 +17,12 @@ export function ShortcutCard({ section, leaf }: NavMatch) {
       <Lift className="h-full">
         <Card
           size="sm"
-          className="hover:bg-muted/50 hover:border-foreground/20 h-full transition-colors"
+          className={cn(
+            "hover:bg-muted/50 h-full transition-colors",
+            leaf.count
+              ? "border-amber-500/30 hover:border-amber-500/50"
+              : "hover:border-foreground/20"
+          )}
         >
           <CardContent className="flex items-center gap-3">
             <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110">
@@ -29,7 +35,10 @@ export function ShortcutCard({ section, leaf }: NavMatch) {
               </div>
             </div>
             {leaf.count ? (
-              <Badge variant="secondary" title="Outstanding strings">
+              <Badge
+                title="Outstanding strings"
+                className="bg-amber-500/15 text-amber-700 dark:text-amber-400"
+              >
                 {leaf.count}
               </Badge>
             ) : (

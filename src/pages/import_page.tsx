@@ -35,6 +35,7 @@ import {
   type BundleDiff,
 } from "@/lib/bundle_diff";
 import {
+  languageNames,
   languages,
   SOURCE_LANGUAGE,
   type LanguageCode,
@@ -658,6 +659,7 @@ function FileRow({
       </button>
 
       <Select
+        items={languageNames}
         value={file.language ?? ""}
         onValueChange={(value) => onAssign(value as LanguageCode)}
       >

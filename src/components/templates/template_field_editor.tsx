@@ -99,19 +99,22 @@ export function TemplateFieldEditor({
     <section
       className={cn(
         "border-b px-4 py-3",
-        isDirty && "bg-accent/30",
+        isDirty && "bg-accent/30 border-l-primary border-l-2",
         hasError && "border-l-destructive border-l-2"
       )}
     >
       <div className="flex items-center gap-2">
         <h4 className="text-sm font-medium">{field.label}</h4>
         {!readOnly && !current && (
-          <Badge variant="default" className="shrink-0">
+          <Badge
+            variant="outline"
+            className="shrink-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+          >
             Missing
           </Badge>
         )}
         {isDirty && (
-          <Badge variant="secondary" className="shrink-0">
+          <Badge className="bg-primary/10 text-primary shrink-0">
             Unsaved
           </Badge>
         )}

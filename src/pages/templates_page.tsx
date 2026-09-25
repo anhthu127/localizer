@@ -3,13 +3,13 @@ import { AlertTriangle, Search } from "lucide-react"
 import { motion } from "motion/react"
 import { Navigate, useParams, useSearchParams } from "react-router"
 
+import { AnimatedProgress } from "@/components/motion/animated_progress"
 import { FadeIn } from "@/components/motion/fade_in"
 import { TemplateDialog } from "@/components/templates/template_dialog"
 import { TemplateTable } from "@/components/templates/template_table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -21,7 +21,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { findNavLeaf } from "@/config/nav_items"
 import { kindLabel, profileOf } from "@/config/target_profiles"
 import { useTemplates } from "@/hooks/use_templates"
+import { toneOf, toneText } from "@/lib/coverage"
 import {
+  languageNames,
   languages,
   SOURCE_LANGUAGE,
   type LanguageCode,
@@ -34,6 +36,7 @@ import {
   type TemplateChannel,
   type TemplateEntry,
 } from "@/lib/template_data"
+import { cn } from "@/lib/utils"
 
 const ALL = "__all__"
 const DEFAULT_LANGUAGE: LanguageCode = "vi"
@@ -149,6 +152,7 @@ export function TemplatesPage() {
         </div>
 
         <Select
+          items={languageNames}
           value={language}
           onValueChange={(value) => setParam("lang", value)}
         >
@@ -167,6 +171,7 @@ export function TemplatesPage() {
         {templates.length > 0 && (
           <>
             <Select
+              items={{ [ALL]: "Every category", ...categoryLabel }}
               value={category}
               onValueChange={(value) =>
                 setParam("category", value === ALL ? null : value)
@@ -186,6 +191,10 @@ export function TemplatesPage() {
             </Select>
 
             <Select
+              items={{
+                [ALL]: "Every product",
+                ...Object.fromEntries(owners),
+              }}
               value={owner}
               onValueChange={(value) =>
                 setParam("owner", value === ALL ? null : value)
@@ -220,13 +229,24 @@ export function TemplatesPage() {
           {templates.length > 0 && !isSource && (
             <>
               <div className="w-40">
-                <Progress value={totals.percent} />
+                <AnimatedProgress
+                  value={totals.percent}
+                  tone={toneOf(totals.percent)}
+                />
               </div>
               <span className="text-muted-foreground text-sm tabular-nums">
-                {totals.percent}% · {totals.translated}/{totals.fields} fields
+                <span
+                  className={cn(
+                    "font-semibold",
+                    toneText[toneOf(totals.percent)]
+                  )}
+                >
+                  {totals.percent}%
+                </span>{" "}
+                · {totals.translated}/{totals.fields} fields
               </span>
               {totals.needsReview > 0 && (
-                <Badge variant="outline" className="gap-1">
+                <Badge className="gap-1 bg-amber-500/15 text-amber-700 dark:text-amber-400">
                   <AlertTriangle className="size-3" />
                   {totals.needsReview} to review
                 </Badge>
@@ -279,14 +299,16 @@ export function TemplatesPage() {
       )}
 
       {!isLoading && !error && templates.length > 0 && (
-        <FadeIn className="min-h-0 flex-1 overflow-auto">
-          <TemplateTable
-            channel={channel}
-            entries={filtered}
-            openId={openId ?? undefined}
-            showProgress={!isSource}
-            onOpen={(id) => setParam("template", id)}
-          />
+        <FadeIn className="min-h-0 flex-1 overflow-auto p-4">
+          <div className="bg-card ring-foreground/10 overflow-hidden rounded-xl ring-1">
+            <TemplateTable
+              channel={channel}
+              entries={filtered}
+              openId={openId ?? undefined}
+              showProgress={!isSource}
+              onOpen={(id) => setParam("template", id)}
+            />
+          </div>
           {filtered.length === 0 && (
             <p className="text-muted-foreground p-6 text-center text-sm">
               No template matches these filters.

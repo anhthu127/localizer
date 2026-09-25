@@ -76,6 +76,7 @@ export function DashboardPage() {
               value={coverage ? totalNeedsReview(coverage) : null}
               hint="missing, or flagged by a check"
               icon={AlertTriangle}
+              tone="warning"
             />
           </StaggerItem>
         </Stagger>

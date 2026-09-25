@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CoverageResponse } from "@/lib/api_types"
-import { issueCountOf, percentOf } from "@/lib/coverage"
+import { issueCountOf, percentOf, toneOf, toneText } from "@/lib/coverage"
 import { languages } from "@/lib/locale_data"
+import { cn } from "@/lib/utils"
 import { workspaceLink } from "@/lib/workspace_link"
 
 const nameOf = (code: string) =>
@@ -52,6 +53,7 @@ export function LanguageCoverageCard({ coverage }: LanguageCoverageCardProps) {
             {coverage.languages.map((entry) => {
               const percent = percentOf(entry, sourceKeyCount)
               const flagged = issueCountOf(entry)
+              const tone = toneOf(percent)
 
               return (
                 <StaggerItem key={entry.code}>
@@ -64,12 +66,37 @@ export function LanguageCoverageCard({ coverage }: LanguageCoverageCardProps) {
                       <span className="text-muted-foreground text-xs">
                         {entry.code}
                       </span>
-                      <span className="ml-auto tabular-nums">{percent}%</span>
+                      <span
+                        className={cn(
+                          "ml-auto font-semibold tabular-nums",
+                          toneText[tone]
+                        )}
+                      >
+                        {percent}%
+                      </span>
                     </div>
-                    <AnimatedProgress value={percent} className="mt-1.5" />
+                    <AnimatedProgress
+                      value={percent}
+                      tone={tone}
+                      className="mt-1.5"
+                    />
                     <div className="text-muted-foreground mt-1 text-xs tabular-nums">
-                      {entry.missing} missing · {flagged.toLocaleString()}{" "}
-                      flagged
+                      <span
+                        className={cn(
+                          entry.missing > 0 && "text-destructive font-medium"
+                        )}
+                      >
+                        {entry.missing.toLocaleString()} missing
+                      </span>
+                      {" · "}
+                      <span
+                        className={cn(
+                          flagged > 0 &&
+                            "font-medium text-amber-600 dark:text-amber-500"
+                        )}
+                      >
+                        {flagged.toLocaleString()} flagged
+                      </span>
                       {entry.issues.script > 0 &&
                         ` (${entry.issues.script.toLocaleString()} wrong script)`}
                     </div>

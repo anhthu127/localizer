@@ -87,6 +87,7 @@ export function TranslationRow({
     maxLength: profile.maxLength,
   })
   const hasError = issues.some((issue) => issue.level === "error")
+  const hasWarning = issues.some((issue) => issue.level === "warning")
 
   const handleCopy = async () => {
     if (await copyText(row.source)) {
@@ -102,8 +103,12 @@ export function TranslationRow({
     <div
       className={cn(
         ROW_GRID,
-        "group items-start gap-3 border-b px-4 py-3",
-        isDirty && "bg-accent/40",
+        "group items-start gap-3 border-b px-4 py-3 transition-colors",
+        !isDirty &&
+          !isSelected &&
+          "hover:bg-muted/40 focus-within:bg-accent/40",
+        hasWarning && "border-l-2 border-l-amber-500",
+        isDirty && "bg-accent/40 border-l-primary border-l-2",
         isSelected && "bg-destructive/5",
         hasError && "border-l-destructive border-l-2"
       )}
@@ -126,9 +131,7 @@ export function TranslationRow({
             {statusLabel[row.status]}
           </Badge>
           {isNew && (
-            <Badge variant="secondary" className="shrink-0">
-              New
-            </Badge>
+            <Badge className="bg-primary/10 text-primary shrink-0">New</Badge>
           )}
           <Button
             variant="ghost"
@@ -142,7 +145,7 @@ export function TranslationRow({
           </Button>
         </div>
         <div className="mt-1 flex items-start gap-2">
-          <p className="text-sm">{row.source}</p>
+          <p className="text-sm font-medium">{row.source}</p>
           {/* Two different things a translator wants from the English, and one
               button used to do the second while its icon promised the first:
               take it away to a CAT tool, or drop it in as the starting point. */}
@@ -223,7 +226,7 @@ function Audit({ row }: { row: Row }) {
       {updated ? (
         <>
           <span
-            className="text-foreground truncate tabular-nums"
+            className="truncate tabular-nums"
             title={updated.at}
           >
             {formatDateTime(updated.at)}
