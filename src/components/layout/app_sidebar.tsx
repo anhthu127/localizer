@@ -16,7 +16,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -30,7 +29,7 @@ export function AppSidebar() {
   const activeSectionId = pathname.split("/")[1] ?? ""
 
   // Open groups are derived from the route, but a manual toggle wins until the
-  // route moves to another section — hence the reset during render rather than
+  // route moves to another section - hence the reset during render rather than
   // an effect.
   const [opened, setOpened] = useState<{
     section: string
@@ -138,11 +137,6 @@ export function AppSidebar() {
                                 <item.icon />
                                 <span>{item.title}</span>
                               </SidebarMenuSubButton>
-                              {item.count ? (
-                                <SidebarMenuBadge className="top-1/2 -translate-y-1/2">
-                                  {item.count}
-                                </SidebarMenuBadge>
-                              ) : null}
                             </SidebarMenuSubItem>
                           )
                         })}

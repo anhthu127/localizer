@@ -20,7 +20,7 @@ export type NavLeaf = {
   id: string
   title: string
   icon: LucideIcon
-  /** Outstanding strings for the selected language — placeholder data for now. */
+  /** Outstanding strings for the selected language - placeholder data for now. */
   count?: number
 }
 
@@ -54,13 +54,13 @@ export const navSections: NavSection[] = [
     ],
   },
   /**
-   * Messages, not screens — and one leaf per *channel*, not per message.
+   * Messages, not screens - and one leaf per *channel*, not per message.
    *
    * These used to be three leaves named after single mails ("Mail invite
    * user", "SMS invite user", "Mail notification"). Each of those is one
    * template among many: the same product sends an invite to a coach, a
    * teacher, a parent and a student, and they are different copy. So the leaf
-   * is the format — email, SMS, notification — and the templates inside it are
+   * is the format - email, SMS, notification - and the templates inside it are
    * a table. See `src/lib/template_data.ts`.
    */
   {
@@ -80,7 +80,7 @@ export type NavMatch = {
   leaf: NavLeaf
 }
 
-/** `/web/school` — the one place a target URL is built. */
+/** `/web/school` - the one place a target URL is built. */
 export function navPath(section: NavSection, leaf: NavLeaf) {
   return `/${section.id}/${leaf.id}`
 }
@@ -94,7 +94,7 @@ export function findNavLeaf(
   return section && leaf ? { section, leaf } : null
 }
 
-/** Every leaf, flattened — the dashboard shortcut grid reads this. */
+/** Every leaf, flattened - the dashboard shortcut grid reads this. */
 export const navLeaves: NavMatch[] = navSections.flatMap((section) =>
   section.items.map((leaf) => ({ section, leaf }))
 )

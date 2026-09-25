@@ -16,7 +16,7 @@ export function AppLayout() {
       <SidebarInset className="h-svh overflow-hidden">
         <AppHeader />
         {/* Keyed on the path, so a target swap remounts the screen and plays
-            its entrance — and drops the previous target's unsaved edits with
+            its entrance - and drops the previous target's unsaved edits with
             it. There is no exit animation on purpose: the outgoing screen
             still reads the router's context, so holding it on screen would
             show it the new target's data for the length of the fade. */}

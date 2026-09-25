@@ -27,8 +27,8 @@ type RichTextEditorProps = {
  * A translator is not a front-end developer, and asking one to keep `<p>` pairs
  * balanced by hand is how a mail ships with the rest of its text swallowed into
  * one paragraph. So bold, italics, links and lists are buttons, and the markup
- * is this component's problem. The raw HTML is still one click away — see the
- * Source toggle on the field — because fixing a tag the editor cannot express
+ * is this component's problem. The raw HTML is still one click away - see the
+ * Source toggle on the field - because fixing a tag the editor cannot express
  * has to stay possible.
  *
  * Built on `contenteditable` and `execCommand` rather than on an editor
@@ -47,7 +47,7 @@ export function RichTextEditor({
   const ref = useRef<HTMLDivElement>(null)
   // The last value this editor itself produced. Writing the DOM on every
   // keystroke would put the caret back at the start of the field, so the value
-  // is written only when it changed somewhere else — a copy-English click, or
+  // is written only when it changed somewhere else - a copy-English click, or
   // a different template opening.
   const emitted = useRef<string | null>(null)
 
@@ -94,7 +94,7 @@ export function RichTextEditor({
     // selection `createLink` needs. `translations_page.tsx` asks about deleting
     // a key the same way.
     const url = window.prompt(
-      "Link address — a URL, or a placeholder such as {link}"
+      "Link address - a URL, or a placeholder such as {link}"
     )
     if (url) {
       run("createLink", url)

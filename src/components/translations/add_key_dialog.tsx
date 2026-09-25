@@ -35,11 +35,11 @@ type Created = {
 }
 
 type AddKeyDialogProps = {
-  /** `web/school` — the app the key is created in, and the only one it reaches. */
+  /** `web/school` - the app the key is created in, and the only one it reaches. */
   target: string
   /** How the app is named in the menu, for the dialog's copy. */
   targetTitle: string
-  /** `/web/school` — where the confirmation's language links point. */
+  /** `/web/school` - where the confirmation's language links point. */
   targetLink: string
   /** Called once the server has written the key, with the key it wrote. */
   onCreated: (key: string) => void
@@ -51,7 +51,7 @@ type AddKeyDialogProps = {
  * Adding a key belongs to an app, not to the product.
  *
  * Each target is its own application with its own key namespace, so there is
- * no sensible global "add a key" — the question "to which app?" has to be
+ * no sensible global "add a key" - the question "to which app?" has to be
  * answered before the form makes sense, and the workspace has already answered
  * it. `POST /api/keys` therefore carries this screen's target, and the key is
  * written for that target only.
@@ -82,7 +82,7 @@ export function AddKeyDialog({
 
   const formatError =
     trimmedKey && !isValidKey(trimmedKey)
-      ? "Use dot-separated segments — group.section.name."
+      ? "Use dot-separated segments - group.section.name."
       : null
   const keyError =
     serverError ??
@@ -150,7 +150,7 @@ export function AddKeyDialog({
             <DialogHeader>
               <DialogTitle>Key added to {targetTitle}</DialogTitle>
               <DialogDescription>
-                <span className="font-mono text-xs">{created.key}</span> —
+                <span className="font-mono text-xs">{created.key}</span> -
                 written to {created.languages.length} language files for this
                 app, missing in {created.languages.length - 1} of them until
                 someone translates it.
@@ -265,7 +265,7 @@ export function AddKeyDialog({
               ) : placeholders.length > 0 ? (
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <Braces className="size-3.5" />
-                  Placeholders {placeholders.join(" ")} — every translation must
+                  Placeholders {placeholders.join(" ")} - every translation must
                   keep them.
                 </p>
               ) : (

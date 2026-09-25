@@ -34,14 +34,15 @@ type TemplateTableProps = {
 }
 
 /**
- * The template list — one row per message, opened for translation by clicking
+ * The template list - one row per message, opened for translation by clicking
  * it.
  *
  * The columns are what a translator needs to choose a row without opening it:
  * **who receives it** (an invite to a coach and an invite to a parent are
  * different copy), **which product sends it** (the terminology has to agree
  * with that app's UI strings), **who created it** (the person to ask when the
- * English is ambiguous) and **how far along it is** in the selected language.
+ * English is ambiguous), **who last wrote it** in the selected language and
+ * **how far along it is** there.
  *
  * SMS gets a segment column too, because a message that costs three segments
  * instead of one is a row you want to see before you open it.
@@ -61,6 +62,7 @@ export function TemplateTable({
           <TableHead className="w-32">Category</TableHead>
           <TableHead className="w-56">Sent from</TableHead>
           <TableHead className="w-48">Created by</TableHead>
+          <TableHead className="w-48">Updated by</TableHead>
           {channel === "sms" && (
             <TableHead className="w-32 text-right">Segments</TableHead>
           )}
@@ -126,6 +128,19 @@ export function TemplateTable({
                 </div>
               </TableCell>
 
+              <TableCell>
+                {entry.updated ? (
+                  <div className="grid gap-0.5">
+                    <span>{entry.updated.by}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {formatDate(entry.updated.at)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-xs">-</span>
+                )}
+              </TableCell>
+
               {channel === "sms" && (
                 <TableCell className="text-right">
                   <Segments entry={entry} />
@@ -174,7 +189,7 @@ function Owner({ owner }: { owner: TemplateOwner }) {
 function Segments({ entry }: { entry: TemplateEntry }) {
   const message = entry.fields.find((field) => field.field === "message")
   if (!message?.target) {
-    return <span className="text-muted-foreground text-xs">—</span>
+    return <span className="text-muted-foreground text-xs">-</span>
   }
 
   const target = smsInfo(message.target)

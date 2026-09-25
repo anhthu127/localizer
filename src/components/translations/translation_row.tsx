@@ -47,12 +47,10 @@ type TranslationRowProps = {
   row: Row
   value: string
   isDirty: boolean
-  /** Added in this app by hand rather than by the import. */
-  isNew?: boolean
   language: LanguageCode
   profile: TargetProfile
   rtl?: boolean
-  /** In the page's delete selection — the checkbox beside the key. */
+  /** In the page's delete selection - the checkbox beside the key. */
   isSelected: boolean
   onChange: (key: string, value: string) => void
   onSelect: (key: string, selected: boolean) => void
@@ -61,8 +59,8 @@ type TranslationRowProps = {
 }
 
 /**
- * The single row editor. The legacy app had four copies of this — workspace,
- * PDF list and two search-result lists — so any fix reached only one of them.
+ * The single row editor. The legacy app had four copies of this - workspace,
+ * PDF list and two search-result lists - so any fix reached only one of them.
  *
  * The three content kinds are variants of this one component, not three
  * components: the target's profile picks the control and the meter, everything
@@ -72,7 +70,6 @@ export function TranslationRow({
   row,
   value,
   isDirty,
-  isNew,
   language,
   profile,
   rtl,
@@ -130,9 +127,6 @@ export function TranslationRow({
           >
             {statusLabel[row.status]}
           </Badge>
-          {isNew && (
-            <Badge className="bg-primary/10 text-primary shrink-0">New</Badge>
-          )}
           <Button
             variant="ghost"
             size="icon"
@@ -172,7 +166,7 @@ export function TranslationRow({
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex min-w-0 flex-col gap-1.5 self-center">
         <Editor
           kind={profile.kind}
           row={row}
@@ -206,44 +200,38 @@ export function TranslationRow({
   )
 }
 
-/**
- * The row's grid, shared with the header above the list so the two line up.
- * The audit column is the first thing to go when the window narrows: on a
- * laptop the editor is worth more than the provenance.
- */
+/** The row's grid, shared with the header above the list so the two line up. */
 export const ROW_GRID =
-  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_9rem]"
+  "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_1.5rem]"
 
 /**
- * When this language's value was last written; who wrote it is one hover away.
- * Empty only while the value is — imported text is stamped with the import.
+ * Who created the key and who last wrote this language's value, one hover
+ * away. `updated` is empty only while the value is - imported text is stamped
+ * with the import.
  */
 function Audit({ row }: { row: Row }) {
-  const updated = row.updated
+  const { created, updated } = row
 
   return (
-    <div className="text-muted-foreground hidden min-w-0 items-center gap-1.5 text-xs xl:flex">
-      {updated ? (
-        <>
-          <span
-            className="truncate tabular-nums"
-            title={updated.at}
-          >
-            {formatDateTime(updated.at)}
+    <div className="text-muted-foreground flex items-center justify-center self-center">
+      <Tooltip>
+        <TooltipTrigger
+          aria-label="Audit trail"
+          className="hover:text-foreground shrink-0"
+        >
+          <Info className="size-4" />
+        </TooltipTrigger>
+        <TooltipContent className="grid gap-0.5 tabular-nums">
+          <span>
+            Created by {created.by} · {formatDateTime(created.at)}
           </span>
-          <Tooltip>
-            <TooltipTrigger
-              aria-label="Updated by"
-              className="hover:text-foreground shrink-0"
-            >
-              <Info className="size-3.5" />
-            </TooltipTrigger>
-            <TooltipContent>Updated by {updated.by}</TooltipContent>
-          </Tooltip>
-        </>
-      ) : (
-        <span>—</span>
-      )}
+          <span>
+            {updated
+              ? `Updated by ${updated.by} · ${formatDateTime(updated.at)}`
+              : "Not translated yet"}
+          </span>
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }
@@ -294,7 +282,7 @@ type MeterProps = {
 /**
  * The SMS meter is the reason the kinds exist. Nine of the twelve target
  * languages have no GSM-7 form, so their segment drops from 160 characters to
- * 70 and a one-segment English message becomes three — a cost nobody sees
+ * 70 and a one-segment English message becomes three - a cost nobody sees
  * until the invoice unless it is on the row.
  */
 function Meter({ kind, source, value }: MeterProps) {

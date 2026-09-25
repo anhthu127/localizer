@@ -59,7 +59,7 @@ const statusFilters: { id: StatusFilter; label: string }[] = [
 const DEFAULT_LANGUAGE: LanguageCode = "vi"
 
 /**
- * Route: `/:sectionId/:leafId` — the target comes from the path, the filters a
+ * Route: `/:sectionId/:leafId` - the target comes from the path, the filters a
  * link needs to carry come from the query string (`?lang=vi&group=nav&q=`), so
  * a workspace view can be shared or bookmarked.
  *
@@ -83,7 +83,7 @@ export function TranslationsPage() {
       ? paramLanguage
       : DEFAULT_LANGUAGE
   const group = params.get("group") ?? ALL_GROUPS
-  // In the URL so a link can point at one key — the add-key dialog does.
+  // In the URL so a link can point at one key - the add-key dialog does.
   const query = params.get("q") ?? ""
 
   const setParam = (name: string, value: string | null) => {
@@ -130,7 +130,7 @@ export function TranslationsPage() {
   const groupOptions = useMemo(() => groupOptionsOf(rows), [rows])
 
   /**
-   * Keyed on the saved values, not the live edits — recomputing 3,339 rows on
+   * Keyed on the saved values, not the live edits - recomputing 3,339 rows on
    * every keystroke would stall typing. The row runs the same checks on its own
    * current value for what it displays; this map only drives the filter.
    */
@@ -242,7 +242,7 @@ export function TranslationsPage() {
   }
 
   // The header checkbox acts on what the filters left on screen, not on the
-  // whole app — the filters are how a bulk delete is aimed.
+  // whole app - the filters are how a bulk delete is aimed.
   const handleSelectAll = (isOn: boolean) => {
     setSelected((current) => {
       const next = new Set(current)
@@ -310,7 +310,7 @@ export function TranslationsPage() {
           Deliberately not in the filter row below: none of them obey a filter.
           An export is a release artifact and always the whole app, an import
           replaces a language file entire, and a key is created in every
-          language at once — a reader should not have to learn that from the
+          language at once - a reader should not have to learn that from the
           dialogs after assuming the search box applied. */}
       <div className="flex flex-wrap items-center gap-2 border-b p-4">
         <div className="mr-1 flex items-center gap-2">
@@ -329,7 +329,7 @@ export function TranslationsPage() {
               {/* A link, not a dialog: the wizard takes a dozen files, each
                   with its own language and its own diff. Leaving the workspace
                   also drops the unsaved tray, which an import would have
-                  invalidated anyway — the edits were made against values the
+                  invalidated anyway - the edits were made against values the
                   import replaces. */}
               <Button
                 variant="outline"
@@ -351,7 +351,7 @@ export function TranslationsPage() {
 
       {/* Which rows you are looking at: the language, and what narrows it.
           The coverage readout sits here rather than with the title because it
-          is the selected language's, and changes when that select changes —
+          is the selected language's, and changes when that select changes -
           though not when the group or the search does, which count the whole
           language. */}
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
@@ -400,11 +400,6 @@ export function TranslationsPage() {
                   onClick={() => setStatus(filter.id)}
                 >
                   {filter.label}
-                  {filter.id === "issues" && needsReview.size > 0 && (
-                    <Badge className="ml-1.5 bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                      {needsReview.size}
-                    </Badge>
-                  )}
                 </Button>
               ))}
               <Badge variant="outline" className="ml-2">
@@ -473,7 +468,7 @@ export function TranslationsPage() {
 
       {!isLoading && !error && hasKeys && (
         <div className="m-4 flex min-h-0 flex-1 flex-col bg-card ring-foreground/10 overflow-hidden rounded-xl ring-1">
-          {/* The list is virtualized, so the header cannot be a table header —
+          {/* The list is virtualized, so the header cannot be a table header -
               it is the same grid as the row, sitting above the scroller. */}
           <div
             className={cn(
@@ -491,7 +486,7 @@ export function TranslationsPage() {
               Key and English
             </span>
             <span>{languageName}</span>
-            <span className="hidden xl:block">Audit</span>
+            <span />
           </div>
 
           <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
@@ -515,7 +510,6 @@ export function TranslationsPage() {
                       row={row}
                       value={value}
                       isDirty={row.key in edits}
-                      isNew={row.origin === "manual"}
                       isSelected={selected.has(row.key)}
                       language={language}
                       profile={profile}

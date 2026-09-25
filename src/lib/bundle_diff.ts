@@ -5,11 +5,11 @@
  * Pure, and deliberately separate from the dialog that shows it: the preview
  * the reviewer accepts and the write the server performs have to agree about
  * what "replace" means, so the rule is written once here and once in
- * `src/mock/store.ts` against the same vocabulary — nothing is written until
+ * `src/mock/store.ts` against the same vocabulary - nothing is written until
  * the preview is accepted (see `docs/redesign_brief.md`, §3.7).
  *
  * A file may hold keys the registry has never heard of. Importing registers
- * them — `new` in the diff below — against the value the file carries, giving
+ * them - `new` in the diff below - against the value the file carries, giving
  * every other language the same key and no text, exactly as `createKey` does.
  * A key whose name the registry cannot accept is the one thing still skipped,
  * and it is named rather than dropped quietly.
@@ -26,7 +26,7 @@ import {
 } from "@/lib/locale_data";
 import { checkTranslation, type RowIssue } from "@/lib/validation";
 
-/** A file that is not a language file at all — the message is shown as typed. */
+/** A file that is not a language file at all - the message is shown as typed. */
 export class BundleFileError extends Error {
   constructor(message: string) {
     super(message);
@@ -35,11 +35,11 @@ export class BundleFileError extends Error {
 }
 
 /**
- * `new` — the registry does not define this key; importing registers it.
- * `added` — the key is defined, held nothing, and the file brings text.
- * `changed` — both sides have text and they differ.
- * `removed` — there was text, and importing takes it away.
- * `unchanged` — the file agrees with what is already stored.
+ * `new` - the registry does not define this key; importing registers it.
+ * `added` - the key is defined, held nothing, and the file brings text.
+ * `changed` - both sides have text and they differ.
+ * `removed` - there was text, and importing takes it away.
+ * `unchanged` - the file agrees with what is already stored.
  */
 export type DiffKind = "new" | "added" | "changed" | "removed" | "unchanged";
 
@@ -54,7 +54,7 @@ export type DiffEntry = {
   after: string;
   /** The English, for a reviewer reading the two values side by side. */
   source: string;
-  /** What the checks say about `after` — an import can introduce them too. */
+  /** What the checks say about `after` - an import can introduce them too. */
   issues: RowIssue[];
 };
 
@@ -63,7 +63,7 @@ export type DiffCounts = Record<DiffKind, number>;
 export type BundleDiff = {
   entries: DiffEntry[];
   counts: DiffCounts;
-  /** Keys whose names the registry cannot accept — see `KEY_PATTERN`. Skipped. */
+  /** Keys whose names the registry cannot accept - see `KEY_PATTERN`. Skipped. */
   invalid: string[];
   /** Entries whose new value a check would flag as an error. */
   errors: number;
@@ -75,7 +75,7 @@ export const CHANGED_KINDS: DiffKind[] = ["new", "added", "changed", "removed"];
 /**
  * A language file, read off disk.
  *
- * The stored bundles are flat — `"nav.home": "Trang chủ"` — but a file exported
+ * The stored bundles are flat - `"nav.home": "Trang chủ"` - but a file exported
  * from somewhere else may nest the segments instead, so nested objects are
  * flattened back onto dotted keys rather than rejected. Numbers and booleans
  * are read as their text; anything else is a shape this app cannot store, and
@@ -88,7 +88,7 @@ export function parseBundleFile(text: string): LocaleBundle {
     parsed = JSON.parse(text);
   } catch (cause) {
     throw new BundleFileError(
-      `That file is not valid JSON — ${cause instanceof Error ? cause.message : String(cause)}`,
+      `That file is not valid JSON - ${cause instanceof Error ? cause.message : String(cause)}`,
     );
   }
 
@@ -130,7 +130,7 @@ function flatten(
       flatten(value, key, out);
     } else {
       throw new BundleFileError(
-        `"${key}" holds a ${Array.isArray(value) ? "list" : typeof value} — every value has to be text.`,
+        `"${key}" holds a ${Array.isArray(value) ? "list" : typeof value} - every value has to be text.`,
       );
     }
   }
@@ -139,7 +139,7 @@ function flatten(
 type DiffOptions = {
   mode: ImportMode;
   language: LanguageCode;
-  /** From the target's profile, for the length checks — see `target_profiles.ts`. */
+  /** From the target's profile, for the length checks - see `target_profiles.ts`. */
   lengthBudget: number;
   maxLength?: number;
 };
@@ -148,15 +148,15 @@ type DiffOptions = {
  * The preview: every key this app defines, what the file would do to it, and
  * the keys the file would add to the registry.
  *
- * `replace` is the honest reading of "the file becomes this language" — a key
+ * `replace` is the honest reading of "the file becomes this language" - a key
  * the file leaves out loses its value, and the diff says so in red rather than
  * letting it happen quietly. `merge` leaves those keys alone, which is what a
  * partial file from an agency usually means. Neither mode un-registers a key:
  * `replace` empties what this app already defines, and whether a key survives
  * the delivery is a question about all of its files at once, which one file's
- * diff cannot answer — `pages/import_page.tsx` asks it across the batch.
+ * diff cannot answer - `pages/import_page.tsx` asks it across the batch.
  *
- * Registry order first, then the file's own order for what it brings — so the
+ * Registry order first, then the file's own order for what it brings - so the
  * preview reads like the file does, and the keys that did not exist a moment
  * ago are together at the end of their group.
  */
@@ -222,7 +222,7 @@ export function diffBundle(
   const invalid: string[] = [];
 
   // A key the file brings and the registry does not hold. Importing creates
-  // it, so it is a change to preview rather than a line in a footnote — but
+  // it, so it is a change to preview rather than a line in a footnote - but
   // only if the registry can hold its name at all.
   for (const [key, after] of Object.entries(incoming)) {
     if (known.has(key)) {
@@ -240,7 +240,7 @@ export function diffBundle(
     const source = language === SOURCE_LANGUAGE ? after : "";
 
     // An empty source makes `checkTranslation` a no-op, which is the honest
-    // answer — there is nothing to check a first translation against.
+    // answer - there is nothing to check a first translation against.
     const issues = checkTranslation(source, after, {
       language,
       lengthBudget,

@@ -1,7 +1,7 @@
 /**
  * Copying text to the clipboard, with the fallback the dev server needs.
  *
- * `navigator.clipboard` exists only in a secure context — https, or localhost.
+ * `navigator.clipboard` exists only in a secure context - https, or localhost.
  * Opening the dev server on a LAN address to read a translation on a phone is
  * not one, so the async API is simply `undefined` there and a copy button that
  * only calls it fails silently. The textarea trick is deprecated but still
@@ -16,7 +16,7 @@ export async function copyText(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text)
       return true
     } catch {
-      // Blocked by permissions or a non-secure context — try the fallback.
+      // Blocked by permissions or a non-secure context - try the fallback.
     }
   }
 

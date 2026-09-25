@@ -22,7 +22,7 @@ import { languages, SOURCE_LANGUAGE, type LanguageCode } from "@/lib/locale_data
 const PREVIEW = 6
 
 type DeleteKeysDialogProps = {
-  /** `web/school` — the app the keys are deleted from, and the only one. */
+  /** `web/school` - the app the keys are deleted from, and the only one. */
   target: string
   /** How the app is named in the menu, for the dialog's copy. */
   targetTitle: string
@@ -37,7 +37,7 @@ type DeleteKeysDialogProps = {
 }
 
 /**
- * The one confirmation for every delete on the workspace — one row's trash
+ * The one confirmation for every delete on the workspace - one row's trash
  * button and a selection of four thousand reach the same dialog, because they
  * ask the same question and a bulk delete is the one that deserves it.
  *
@@ -104,7 +104,7 @@ export function DeleteKeysDialog({
             Delete {count} {noun}
           </DialogTitle>
           <DialogDescription>
-            From {targetTitle}. No other app is touched — each one keeps its own
+            From {targetTitle}. No other app is touched - each one keeps its own
             keys.
           </DialogDescription>
         </DialogHeader>
@@ -132,7 +132,7 @@ export function DeleteKeysDialog({
             Delete in the other {others} languages too
             <span className="text-muted-foreground">
               {" "}
-              — {everywhere
+              - {everywhere
                 ? `the ${noun} and every translation of ${them} leave this app for good.`
                 : `leave this off and only ${languageName} is cleared: the ${noun} stay registered, read as missing here, and keep their text everywhere else.`}
             </span>

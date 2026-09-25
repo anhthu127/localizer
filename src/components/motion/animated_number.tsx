@@ -10,7 +10,7 @@ import {
 import { easeOut } from "@/lib/motion"
 
 type AnimatedNumberProps = {
-  /** Null while the number is still loading — renders `fallback` instead. */
+  /** Null while the number is still loading - renders `fallback` instead. */
   value: number | null
   className?: string
   /** Shown until `value` arrives. */
@@ -21,13 +21,13 @@ type AnimatedNumberProps = {
 
 /**
  * Counts up to `value` instead of snapping to it. The tween runs on a motion
- * value rather than React state, so the count never re-renders the tree — and
+ * value rather than React state, so the count never re-renders the tree - and
  * it is skipped outright for anyone who asked for reduced motion.
  */
 export function AnimatedNumber({
   value,
   className,
-  fallback = "—",
+  fallback = "-",
   duration = 0.9,
 }: AnimatedNumberProps) {
   const prefersReducedMotion = useReducedMotion()

@@ -14,7 +14,7 @@ type State = {
  * Dashboard totals from `GET /api/coverage`.
  *
  * These used to be a generated module, because counting meant loading all 13
- * bundles into the browser. The server holds the files, so it counts them —
+ * bundles into the browser. The server holds the files, so it counts them -
  * and the numbers move when a key is added.
  */
 export function useCoverage(): State {

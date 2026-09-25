@@ -1,10 +1,10 @@
 /**
- * Message templates — the domain model behind the Others targets.
+ * Message templates - the domain model behind the Others targets.
  *
  * `docs/target_apps_ui.md` §9 asks whether email, SMS and notification text is
  * stored as ordinary key/value strings or as template records. This file is the
- * answer: both. A template is a record with its own metadata — name, who
- * receives it, which product sends it, who created it — and its text is
+ * answer: both. A template is a record with its own metadata - name, who
+ * receives it, which product sends it, who created it - and its text is
  * ordinary keys in that channel's bundle, one per field:
  *
  *     invite_coach.subject   invite_coach.body   invite_coach.cta   …
@@ -14,12 +14,13 @@
  * registry adds what a key cannot carry: a human name for the whole message,
  * and the category and owner a translator filters by.
  *
- * No I/O here — `src/mock/store.ts` imports this module directly, so the browser
+ * No I/O here - `src/mock/store.ts` imports this module directly, so the browser
  * and the backend cannot disagree about a template's field schema.
  */
 
 import {
   statusOf,
+  type AuditStamp,
   type LanguageCode,
   type LocaleBundle,
   type TranslationStatus,
@@ -45,7 +46,7 @@ export type TemplateCategory =
   | "admin"
   | "staff"
 
-/** The product that sends it — `{ kind: "web", app: "school" }`. */
+/** The product that sends it - `{ kind: "web", app: "school" }`. */
 export type TemplateOwner = {
   kind: "web" | "app"
   /** A nav leaf id, so the table can link to that target. */
@@ -63,11 +64,11 @@ export type TemplateFieldId =
 export type TemplateField = {
   id: TemplateFieldId
   label: string
-  /** `line` — one-line input. `paragraph` — growing textarea. `rich` — HTML body. */
+  /** `line` - one-line input. `paragraph` - growing textarea. `rich` - HTML body. */
   control: "line" | "paragraph" | "rich"
   /** `html` fields get the tag-balance and link checks; `text` fields do not. */
   format: "text" | "html"
-  /** Hard ceiling the backend enforces — over it is an error. */
+  /** Hard ceiling the backend enforces - over it is an error. */
   maxLength?: number
   /**
    * Soft ceiling the channel imposes: a push title over 65 characters is not
@@ -157,14 +158,14 @@ export function fieldOf(
   return field
 }
 
-/** One template's registry row — `server-data/templates.json`, one of them. */
+/** One template's registry row - `server-data/templates.json`, one of them. */
 export type TemplateRecord = {
   /** Also the key prefix: `invite_coach` owns `invite_coach.subject`. */
   id: string
   name: string
   channel: TemplateChannel
   category: TemplateCategory
-  /** The menu target that owns the keys — `others/email`. */
+  /** The menu target that owns the keys - `others/email`. */
   target: string
   owner: TemplateOwner
   createdBy: string
@@ -192,8 +193,13 @@ export type TemplateEntry = {
   fields: TemplateFieldValue[]
   translated: number
   total: number
-  /** Translated fields a check flagged — see `lib/validation.ts`. */
+  /** Translated fields a check flagged - see `lib/validation.ts`. */
   needsReview: number
+  /**
+   * The latest write to any of its fields in this language. Absent while every
+   * field is empty.
+   */
+  updated?: AuditStamp
 }
 
 /** `invite_coach` + `subject` → `invite_coach.subject`. */

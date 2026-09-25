@@ -2,23 +2,23 @@
  * The mock backend's storage layer: a handful of JSON documents, addressed by
  * path through `FileStore`.
  *
- *   keys.json                        the key registry — one row per key
- *   templates.json                   the template registry — one row per template
+ *   keys.json                        the key registry - one row per key
+ *   templates.json                   the template registry - one row per template
  *   translations/<app>/<code>.json   one file per app per language
  *   audit/<app>/<code>.json          who last wrote each of those values
  *
  * Where those documents actually live is the caller's business: real files
  * under `server-data/` on the dev server, IndexedDB in a tab with no backend
  * behind it. Nothing in this file knows which, and nothing in it imports
- * `node:` anything — that is what lets the same mock serve a static deploy.
+ * `node:` anything - that is what lets the same mock serve a static deploy.
  *
  * A template is not a fourth kind of storage: its text lives in the same
  * per-app language files as everything else, keyed `<template>.<field>`, and
- * `templates.json` holds only what a key cannot carry — the message's name,
+ * `templates.json` holds only what a key cannot carry - the message's name,
  * who receives it, which product sends it. See `src/lib/template_data.ts`.
  *
- * Each app is its own key namespace — `web/school` and `app/parent` can both
- * define `nav.home` and mean different things — so the value files are nested
+ * Each app is its own key namespace - `web/school` and `app/parent` can both
+ * define `nav.home` and mean different things - so the value files are nested
  * per app rather than pooled. An app with no keys has no folder yet.
  *
  * Seeded from `sample-data/locale/*.json` into `web/school` on first use, so
@@ -27,7 +27,7 @@
  *
  * English is not special: `<app>/en.json` is a language file like any other,
  * and the registry holds no text at all. That is how a real schema would
- * separate a key from its translations, which is the point — the API this
+ * separate a key from its translations, which is the point - the API this
  * backs can be swapped for a real one without the app noticing.
  *
  * Status and validation are imported from `src/lib` rather than restated, so
@@ -74,7 +74,7 @@ import {
 import { checkTranslation } from "../lib/validation.ts";
 import type { FileStore, SeedSource } from "./file_store.ts";
 
-/** The app the sample export belongs to — see `src/config/target_profiles.ts`. */
+/** The app the sample export belongs to - see `src/config/target_profiles.ts`. */
 const SEED_TARGET = "web/school";
 
 /** Groups shown per language on the dashboard. */
@@ -128,7 +128,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     `translations/${target}/${code}.json`;
 
   /**
-   * The log that shadows it — `audit/web/school/vi.json`, keyed the same way.
+   * The log that shadows it - `audit/web/school/vi.json`, keyed the same way.
    *
    * Beside the bundle rather than inside it: a bundle is a plain `key: text`
    * document that gets exported and shipped as-is, and an audit trail has no
@@ -137,7 +137,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
   const auditFile = (target: string, code: LanguageCode) =>
     `audit/${target}/${code}.json`;
 
-  /** The same path as the UI shows it — forward slashes, relative to the repo. */
+  /** The same path as the UI shows it - forward slashes, relative to the repo. */
   const relativeBundlePath = (target: string, code: LanguageCode) =>
     `server-data/${bundleFile(target, code)}`;
 
@@ -327,6 +327,33 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     };
   }
 
+  /**
+   * The newest logged write across a template's fields. Text that was seeded
+   * with the template and never rewritten falls back to the template's own
+   * stamp, as `originStamp` does for a key.
+   */
+  function templateStamp(
+    record: TemplateRecord,
+    entry: TemplateEntry,
+    log: AuditLog,
+  ): AuditStamp | undefined {
+    const written = entry.fields.filter((field) => field.target);
+    if (written.length === 0) {
+      return undefined;
+    }
+
+    const logged = written
+      .map((field) => log[templateKeyOf(record.id, field.field)])
+      .filter((stamp): stamp is AuditStamp => stamp !== undefined);
+    if (logged.length === 0) {
+      return { by: record.createdBy, at: record.createdAt };
+    }
+
+    return logged.reduce((latest, stamp) =>
+      stamp.at > latest.at ? stamp : latest,
+    );
+  }
+
   function writeKeys(records: KeyRecord[]) {
     writeJson(keysFile, records);
     keyCache = records;
@@ -357,7 +384,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     /**
      * Creates a key in one app and fans it out across that app's languages:
      * the English text into its `en.json`, an empty value into the other
-     * twelve. The empty write is deliberate — the key exists in every language
+     * twelve. The empty write is deliberate - the key exists in every language
      * from the moment it is created, and reads as `missing` until someone
      * translates it.
      *
@@ -381,7 +408,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
       if (!isValidKey(key)) {
         throw new HttpError(
           400,
-          "Use dot-separated segments — group.section.name.",
+          "Use dot-separated segments - group.section.name.",
         );
       }
       if (!source) {
@@ -420,7 +447,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     },
 
     /**
-     * Removes keys from one app, as far as the scope says — see `DeleteScope`.
+     * Removes keys from one app, as far as the scope says - see `DeleteScope`.
      *
      * The selection is intersected with what the app actually holds before
      * anything is written, so a stale tab cannot make the counts lie, and the
@@ -535,18 +562,19 @@ export function createStore(files: FileStore, seeds: SeedSource) {
      * without a round trip.
      *
      * `needsReview` is counted with the same `checkTranslation` the dialog
-     * shows inline, minus the length rule — that one needs the target's
+     * shows inline, minus the length rule - that one needs the target's
      * profile, which lives in `src/config` and is the browser's business.
      */
     templates(target: string, code: string): TemplatesResponse {
       const language = languageOf(code);
       const source = bundle(target, SOURCE_LANGUAGE);
       const values = bundle(target, language);
+      const log = auditLog(target, language);
 
       const entries: TemplateEntry[] = templateRecords()
         .filter((record) => record.target === target)
-        .map((record) =>
-          entryOf(record, source, values, language, (value) => {
+        .map((record) => {
+          const entry = entryOf(record, source, values, language, (value) => {
             const field = fieldOf(record.channel, value.field);
             return (
               checkTranslation(value.source, value.target, {
@@ -556,8 +584,9 @@ export function createStore(files: FileStore, seeds: SeedSource) {
                 format: field.format,
               }).length > 0
             );
-          }),
-        )
+          });
+          return { ...entry, updated: templateStamp(record, entry, log) };
+        })
         .sort((a, b) => a.template.name.localeCompare(b.template.name));
 
       return {
@@ -571,7 +600,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     /**
      * `by` is the audit trail's author. It comes off the request because the
      * mock has no session to read it from; a real service takes it from the
-     * token and ignores whatever the browser claimed — an audit trail the
+     * token and ignores whatever the browser claimed - an audit trail the
      * client can forge is not one. See `src/config/current_user.ts`.
      */
     saveTranslations(
@@ -615,7 +644,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
      * the key with no English either: it reads as missing there until somebody
      * fills it in, and the preview says so before any of this happens.
      *
-     * `replace` is a real replace — a key the file leaves out is emptied, and
+     * `replace` is a real replace - a key the file leaves out is emptied, and
      * reads as missing again. `merge` leaves those keys alone. Neither drops a
      * key from the registry, because one language file is not a statement
      * about which keys the app has: only a whole delivery is, so the wizard
@@ -711,7 +740,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
       }
 
       // Counted as `created` rather than `added`: the key did not exist to be
-      // filled in. Its text still earns a stamp — somebody wrote it.
+      // filled in. Its text still earns a stamp - somebody wrote it.
       for (const record of fresh) {
         const after = values[record.key];
         next[record.key] = after;
@@ -756,7 +785,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
     /* ---------------------------------------------------------------- export */
 
     /**
-     * One JSON file per requested language, for this app only — the same
+     * One JSON file per requested language, for this app only - the same
      * shape as the files on disk, so an export can be dropped straight back
      * into an application.
      *
@@ -764,7 +793,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
      * what its locale files are called: `zh-Hans` here may have to arrive as
      * `zh_CN.json`, and a Flutter app wants `.arb`.
      *
-     * `includeUntranslated` keeps the keys `statusOf` calls missing — empty,
+     * `includeUntranslated` keeps the keys `statusOf` calls missing - empty,
      * or still a copy of the English source. That is what a translator wants
      * to receive. Dropping them is what a runtime bundle wants: the key is
      * absent, so the application falls back to English by itself rather than
@@ -792,7 +821,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
         if (taken.has(name.toLowerCase())) {
           throw new HttpError(
             400,
-            `Two files are both called "${name}" — give each language its own name.`,
+            `Two files are both called "${name}" - give each language its own name.`,
           );
         }
         taken.add(name.toLowerCase());
@@ -823,7 +852,7 @@ export function createStore(files: FileStore, seeds: SeedSource) {
 
     /**
      * Per-language totals across every app, computed from the files with the
-     * same `checkTranslation` the rows use — the generated `locale_coverage.ts`
+     * same `checkTranslation` the rows use - the generated `locale_coverage.ts`
      * and its script existed only because nothing could compute this at
      * runtime.
      */

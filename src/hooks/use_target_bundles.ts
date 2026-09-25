@@ -16,7 +16,7 @@ type State = {
 }
 
 /**
- * One app's keys in *several* languages at once — what the import wizard needs
+ * One app's keys in *several* languages at once - what the import wizard needs
  * and `use_translation_rows.ts` deliberately does not do.
  *
  * The workspace reads one language because a reader reads one language. An
@@ -25,7 +25,7 @@ type State = {
  * *its* language before any of them is written.
  *
  * Languages already held are not fetched again. Adding a thirteenth file to a
- * dozen costs one request, not thirteen — a bundle is around a megabyte, and
+ * dozen costs one request, not thirteen - a bundle is around a megabyte, and
  * the wizard re-renders every time a language select changes.
  */
 export function useTargetBundles(

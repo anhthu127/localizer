@@ -1,10 +1,10 @@
 /**
- * The localization domain model — types and the pure rules over them.
+ * The localization domain model - types and the pure rules over them.
  *
  * This module has no I/O and no browser API in it, on purpose: the mock
  * backend in `src/mock/` imports it directly, so status, key format and group
  * extraction are defined once and the two sides cannot drift. Data itself
- * arrives over HTTP — see `lib/api.ts` for the client and `src/mock/router.ts`
+ * arrives over HTTP - see `lib/api.ts` for the client and `src/mock/router.ts`
  * for the stand-in backend that answers it.
  */
 
@@ -52,7 +52,7 @@ export const languages: Language[] = [
   { code: "km", name: "Khmer" },
 ]
 
-/** `{ vi: "Vietnamese", … }` — what a select shows for its value. */
+/** `{ vi: "Vietnamese", … }` - what a select shows for its value. */
 export const languageNames: Record<string, string> = Object.fromEntries(
   languages.map((item) => [item.code, item.name])
 )
@@ -60,11 +60,11 @@ export const languageNames: Record<string, string> = Object.fromEntries(
 /** One language file: `{ "group.sub.key": "value", … }`. */
 export type LocaleBundle = Record<string, string>
 
-/** `import` — came from the bundle import. `manual` — added in the UI. */
+/** `import` - came from the bundle import. `manual` - added in the UI. */
 export type KeyOrigin = "import" | "manual"
 
 /**
- * `missing` — the target bundle has nothing usable for this key. Three cases,
+ * `missing` - the target bundle has nothing usable for this key. Three cases,
  * all the same thing to a translator:
  *   1. the key is absent from the target bundle,
  *   2. its value is empty,
@@ -75,13 +75,13 @@ export type KeyOrigin = "import" | "manual"
  * string wearing the source's clothes. The rule is skipped when the target
  * language *is* English, where matching the source is the point.
  *
- * `translated` — anything else. Whether the value is any *good* is the job of
+ * `translated` - anything else. Whether the value is any *good* is the job of
  * `lib/validation.ts`.
  */
 export type TranslationStatus = "translated" | "missing"
 
 /**
- * Who did something, and when — `{ by: "Irene Do", at: "2026-03-02T07:11:00Z" }`.
+ * Who did something, and when - `{ by: "Irene Do", at: "2026-03-02T07:11:00Z" }`.
  *
  * `at` is an ISO 8601 instant; the screen decides how to read it out.
  */
@@ -101,7 +101,7 @@ export type TranslationRow = {
   target: string
   status: TranslationStatus
   origin: KeyOrigin
-  /** Who put the key in the registry, and when — the same in every language. */
+  /** Who put the key in the registry, and when - the same in every language. */
   created: AuditStamp
   /**
    * Who last wrote *this language's* value, and when. Absent while the value
@@ -122,7 +122,7 @@ export function groupKeyOf(key: string) {
 /**
  * `school_admin/campus_admin.inviteadmin.text`,
  * `invitation-registernew.policy.accept` and `common.link.repOnline` are all
- * real keys in the export, so `/`, `-` and camelCase are allowed — 434 of the
+ * real keys in the export, so `/`, `-` and camelCase are allowed - 434 of the
  * 3,339 seeded keys carry a capital, and rejecting them would have meant the
  * app refusing to create or import a name 13% of its own data already uses.
  *
@@ -135,7 +135,7 @@ export function isValidKey(key: string) {
   return KEY_PATTERN.test(key)
 }
 
-/** The single definition of status — see `TranslationStatus`. */
+/** The single definition of status - see `TranslationStatus`. */
 export function statusOf(
   source: string,
   target: string | undefined,

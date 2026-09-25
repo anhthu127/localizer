@@ -3,7 +3,7 @@
  *
  * Both sides import this file: `lib/api.ts` in the browser and the mock
  * backend in `src/mock/`. When the real backend arrives, this is the
- * document to hand its author — and the only file that has to change if their
+ * document to hand its author - and the only file that has to change if their
  * shapes differ.
  */
 
@@ -15,12 +15,12 @@ import type {
 } from "./locale_data.ts"
 import type { TemplateEntry } from "./template_data.ts"
 
-/** A key in the registry — `server-data/keys.json`, one row of it. */
+/** A key in the registry - `server-data/keys.json`, one row of it. */
 export type KeyRecord = {
   key: string
   /** First dot-segment, denormalized so a list can group without parsing. */
   group: string
-  /** The menu target that owns it — `web/school`. */
+  /** The menu target that owns it - `web/school`. */
   target: string
   origin: KeyOrigin
   createdAt: string
@@ -32,7 +32,7 @@ export type KeyRecord = {
 }
 
 /**
- * Who last wrote each value of one app's language file — the other half of the
+ * Who last wrote each value of one app's language file - the other half of the
  * audit trail, kept beside the bundle rather than inside it so the bundle stays
  * a plain `key: text` document that can be shipped as-is.
  *
@@ -40,7 +40,7 @@ export type KeyRecord = {
  */
 export type AuditLog = Record<string, AuditStamp>
 
-/** `GET /api/entries?target=&lang=` — one app's keys, status included. */
+/** `GET /api/entries?target=&lang=` - one app's keys, status included. */
 export type EntriesResponse = {
   target: string
   language: LanguageCode
@@ -49,7 +49,7 @@ export type EntriesResponse = {
 }
 
 /**
- * `GET /api/templates?target=&lang=` — one channel's templates, text included.
+ * `GET /api/templates?target=&lang=` - one channel's templates, text included.
  *
  * The Others targets hold message templates rather than loose keys, so this is
  * the list screen's request. There is no per-template GET and no per-template
@@ -72,30 +72,30 @@ export type CreateKeyRequest = {
   target: string
   /**
    * Who is adding it, for the audit trail. Sent by the browser only because
-   * the mock has no session to read it from — see `config/current_user.ts`.
+   * the mock has no session to read it from - see `config/current_user.ts`.
    */
   createdBy?: string
 }
 
 export type CreateKeyResponse = {
   key: KeyRecord
-  /** Language codes the key was written to — the fan-out, confirmed. */
+  /** Language codes the key was written to - the fan-out, confirmed. */
   languages: LanguageCode[]
 }
 
 /**
  * How far a delete reaches.
  *
- * `language` — the values go from one language file and the keys stay in the
+ * `language` - the values go from one language file and the keys stay in the
  * registry, so they read as missing there and every other language keeps its
  * translation. This is the cleanup a translator does.
- * `all` — the keys leave the registry and every language file of the app. The
+ * `all` - the keys leave the registry and every language file of the app. The
  * string is gone from the product.
  */
 export type DeleteScope = "language" | "all"
 
 /**
- * `POST /api/keys/delete` — remove keys from one app.
+ * `POST /api/keys/delete` - remove keys from one app.
  *
  * A POST with a body rather than `DELETE /keys?key=`: a bulk selection is
  * thousands of keys and real keys contain slashes, so neither fits a query
@@ -121,7 +121,7 @@ export type DeleteKeysResponse = {
 /** `PUT /api/translations/:lang?target=` */
 export type SaveTranslationsRequest = {
   values: Record<string, string>
-  /** Who is saving them, for the audit trail — see `CreateKeyRequest`. */
+  /** Who is saving them, for the audit trail - see `CreateKeyRequest`. */
   by?: string
 }
 
@@ -134,18 +134,18 @@ export type SaveTranslationsResponse = {
 /**
  * What a whole-file import does to the keys the file leaves out.
  *
- * `replace` — the language becomes the file: an omitted key loses its value.
- * `merge` — an omitted key keeps whatever it already had, which is what a
+ * `replace` - the language becomes the file: an omitted key loses its value.
+ * `merge` - an omitted key keeps whatever it already had, which is what a
  * partial file from a translation agency usually means.
  */
 export type ImportMode = "replace" | "merge"
 
-/** `PUT /api/import/:lang?target=` — one language file, wholesale. */
+/** `PUT /api/import/:lang?target=` - one language file, wholesale. */
 export type ImportRequest = {
-  /** The file's contents, flattened to `key: text` — see `lib/bundle_diff.ts`. */
+  /** The file's contents, flattened to `key: text` - see `lib/bundle_diff.ts`. */
   values: Record<string, string>
   mode: ImportMode
-  /** Who is importing it, for the audit trail — see `CreateKeyRequest`. */
+  /** Who is importing it, for the audit trail - see `CreateKeyRequest`. */
   by?: string
 }
 
@@ -178,7 +178,7 @@ export type GroupCoverage = {
 
 export type LanguageCoverage = {
   code: LanguageCode
-  /** Key has a value of its own — see `statusOf`. */
+  /** Key has a value of its own - see `statusOf`. */
   translated: number
   /** Key absent, empty, or a verbatim copy of the English source. */
   missing: number
@@ -188,7 +188,7 @@ export type LanguageCoverage = {
   topGroups: GroupCoverage[]
 }
 
-/** `GET /api/coverage` — what the dashboard renders. */
+/** `GET /api/coverage` - what the dashboard renders. */
 export type CoverageResponse = {
   sourceKeyCount: number
   groupCount: number
@@ -199,12 +199,12 @@ export type CoverageResponse = {
 /** One file in an export: a language, and what to call its file. */
 export type ExportFile = {
   language: LanguageCode
-  /** File name inside the archive, extension included — `vi.json`. */
+  /** File name inside the archive, extension included - `vi.json`. */
   name: string
 }
 
 /**
- * `POST /api/export` — answers with a .zip holding one file per language.
+ * `POST /api/export` - answers with a .zip holding one file per language.
  *
  * A POST rather than a GET because the caller names every file in the
  * archive, and a dozen arbitrary names belong in a body rather than a query
@@ -215,7 +215,7 @@ export type ExportRequest = {
   files: ExportFile[]
   /** Archive name without the extension; the server sanitises it. */
   name: string
-  /** Keep the keys `statusOf` calls missing — empty, or still English. */
+  /** Keep the keys `statusOf` calls missing - empty, or still English. */
   includeUntranslated: boolean
 }
 

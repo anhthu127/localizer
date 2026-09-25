@@ -13,7 +13,7 @@ import {
 } from "@/lib/bundle_diff"
 import { cn } from "@/lib/utils"
 
-/** `changes` is every kind that would be written — the view worth reading. */
+/** `changes` is every kind that would be written - the view worth reading. */
 type DiffFilter = DiffKind | "changes"
 
 const filters: { id: DiffFilter; label: string }[] = [
@@ -77,7 +77,7 @@ type BundleDiffViewProps = {
 /**
  * What the import would do, laid out the way a pull request lays out its files.
  *
- * A key group — `nav`, `student`, `cims` — is the file: it is the unit a
+ * A key group - `nav`, `student`, `cims` - is the file: it is the unit a
  * reviewer accepts or rejects as a whole, it is what the keys are named after,
  * and there are a hundred and fifty of them against three thousand keys, so it
  * is also the only grouping that makes the list scannable. Each group collapses
@@ -88,7 +88,7 @@ type BundleDiffViewProps = {
  * the context line. A unified diff and not a two-column one: the values are
  * sentences, the pane is half a dialog wide, and a reviewer scanning for the
  * line about to be thrown away wants it under the line replacing it. `-` is
- * what this language holds today, `+` is what the file would leave behind — the
+ * what this language holds today, `+` is what the file would leave behind - the
  * same reading as `git diff`, so nobody has to be told which is which.
  *
  * Unchanged keys are counted but filtered out by default: a full file agrees
@@ -110,7 +110,7 @@ export function BundleDiffView({
   )
 
   // Numbered over the whole diff rather than the filtered view, so a key keeps
-  // the same line number whichever filter is on — the numbers describe the
+  // the same line number whichever filter is on - the numbers describe the
   // file, not the current reading of it.
   const numbers = useMemo(() => numberEntries(diff.entries), [diff.entries])
 
@@ -567,7 +567,7 @@ function numberEntries(entries: DiffEntry[]): Map<string, LineNumbers> {
  * The filtered entries, gathered under their group.
  *
  * `additions` and `deletions` are what would be written, not what is listed: a
- * changed key costs one of each, an unchanged key neither — the arithmetic a
+ * changed key costs one of each, an unchanged key neither - the arithmetic a
  * reviewer already knows from `git`.
  */
 function groupsOf(entries: DiffEntry[], filter: DiffFilter): GroupDiff[] {
@@ -658,7 +658,7 @@ function pinnedHeader(
     return null
   }
 
-  // Its own header is still on screen under its own power — don't draw it twice.
+  // Its own header is still on screen under its own power - don't draw it twice.
   if (index === first.index && first.start >= offset) {
     return null
   }

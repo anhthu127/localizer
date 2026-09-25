@@ -42,12 +42,12 @@ const ALL = "__all__"
 const DEFAULT_LANGUAGE: LanguageCode = "vi"
 
 /**
- * Route: `/others/:channel` — the template list for one channel.
+ * Route: `/others/:channel` - the template list for one channel.
  *
  * The sibling of `translations_page.tsx`, and the reason there are two: the
  * Others targets hold *messages*, not loose keys. A message is a handful of
  * fields that are only meaningful together, it has metadata a key cannot carry
- * — who receives it, which product sends it, who wrote it — and it has to be
+ * - who receives it, which product sends it, who wrote it - and it has to be
  * seen rendered to be judged. So the screen is a table of templates and a
  * two-panel dialog rather than a virtualized grid of rows.
  *
@@ -92,7 +92,7 @@ export function TemplatesPage() {
     language
   )
 
-  // Only the owners that actually send something in this channel — a filter
+  // Only the owners that actually send something in this channel - a filter
   // listing all ten targets would be mostly dead options.
   const owners = useMemo(() => {
     const seen = new Map<string, string>()

@@ -14,7 +14,7 @@ type StaggerProps = {
 
 /**
  * Deals its children in one after another. Put it on the grid or the list
- * itself — it keeps the element's own classes, so the layout is unchanged.
+ * itself - it keeps the element's own classes, so the layout is unchanged.
  */
 export function Stagger({
   children,

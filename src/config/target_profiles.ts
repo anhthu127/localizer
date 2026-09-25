@@ -1,8 +1,8 @@
 /**
  * One profile per menu target, keyed by its URL path (`web/school`).
  *
- * Each target is a separate application in the legacy model — its own key
- * namespace, its own import, its own publish — so the workspace is not one
+ * Each target is a separate application in the legacy model - its own key
+ * namespace, its own import, its own publish - so the workspace is not one
  * screen showing ten filters of the same data. The profile is what makes the
  * screen differ: which editor the row renders, which meters sit beside it, and
  * what the translator is told before they start.
@@ -15,7 +15,7 @@
 import type { TemplateChannel } from "@/lib/template_data"
 
 /**
- * The axis that actually drives layout — more than Web / App / Messages does.
+ * The axis that actually drives layout - more than Web / App / Messages does.
  *
  * `ui`           thousands of short labels; dense virtualized grid.
  * `email`        multi-field HTML messages; a table of templates, and an
@@ -23,7 +23,7 @@ import type { TemplateChannel } from "@/lib/template_data"
  * `sms`          one tiny field under a hard segment budget, per template.
  * `notification` a title and a body, both truncated by the OS.
  *
- * The last three are channels of the same thing — see `lib/template_data.ts` —
+ * The last three are channels of the same thing - see `lib/template_data.ts` -
  * so they share a screen: a template table, and a two-panel translate dialog.
  */
 export type ContentKind = "ui" | TemplateChannel
@@ -67,7 +67,7 @@ const profiles: TargetProfile[] = [
     path: "web/school",
     kind: "ui",
     audience: "School and campus administrators, regional coaches, staff",
-    tone: "Administrative. Domain terms stay consistent — unit plan, visitation, campus, license.",
+    tone: "Administrative. Domain terms stay consistent - unit plan, visitation, campus, license.",
     bundle: "school",
     lengthBudget: 1.5,
     measured: true,
@@ -98,7 +98,7 @@ const profiles: TargetProfile[] = [
     tone: "Internal tooling language.",
     lengthBudget: 1.5,
     measured: false,
-    note: "No source bundle imported. May also hold file assets — see open question 3.",
+    note: "No source bundle imported. May also hold file assets - see open question 3.",
   },
   {
     path: "app/baby",
@@ -107,7 +107,7 @@ const profiles: TargetProfile[] = [
     tone: "Plain, warm, read-aloud. No admin jargon, no abbreviations.",
     lengthBudget: 1.2,
     measured: false,
-    note: "No source bundle imported. Phone-width labels — keep translations close to the source length.",
+    note: "No source bundle imported. Phone-width labels - keep translations close to the source length.",
   },
   {
     path: "app/parent",
@@ -116,7 +116,7 @@ const profiles: TargetProfile[] = [
     tone: "Plain and reassuring. Avoid internal terms like campus or license.",
     lengthBudget: 1.2,
     measured: false,
-    note: "No source bundle imported. Phone-width labels — keep translations close to the source length.",
+    note: "No source bundle imported. Phone-width labels - keep translations close to the source length.",
   },
   {
     path: "app/student",
@@ -125,13 +125,13 @@ const profiles: TargetProfile[] = [
     tone: "Plain and direct, school-age reading level.",
     lengthBudget: 1.2,
     measured: false,
-    note: "No source bundle imported. Phone-width labels — keep translations close to the source length.",
+    note: "No source bundle imported. Phone-width labels - keep translations close to the source length.",
   },
   {
     path: "others/email",
     kind: "email",
     audience:
-      "Coaches, teachers, parents, students and administrators — one template per audience",
+      "Coaches, teachers, parents, students and administrators - one template per audience",
     tone: "Set by the template's category. An invite to a coach and an invite to a parent are different copy.",
     bundle: "templates",
     lengthBudget: 2,
@@ -143,7 +143,7 @@ const profiles: TargetProfile[] = [
     path: "others/sms",
     kind: "sms",
     audience: "The same people, on a phone",
-    tone: "Terse. Every character costs — say it in one segment if you can.",
+    tone: "Terse. Every character costs - say it in one segment if you can.",
     bundle: "templates",
     lengthBudget: 1.1,
     measured: false,
@@ -167,7 +167,7 @@ const byPath = new Map(profiles.map((profile) => [profile.path, profile]))
  * Takes the route segments rather than nav objects, so the workspace can read a
  * profile before it knows whether the path names a real target.
  *
- * Falls back to a plain UI-strings profile — adding a nav leaf should not be
+ * Falls back to a plain UI-strings profile - adding a nav leaf should not be
  * able to crash the workspace.
  */
 export function profileOf(sectionId?: string, leafId?: string): TargetProfile {
@@ -188,7 +188,7 @@ export function profileOf(sectionId?: string, leafId?: string): TargetProfile {
 
 export const targetCount = profiles.length
 
-/** Targets with data in `sample-data` — School and the three message channels. */
+/** Targets with data in `sample-data` - School and the three message channels. */
 export const targetsWithBundle = profiles.filter(
   (profile) => profile.bundle
 ).length

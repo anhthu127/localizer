@@ -24,7 +24,7 @@ type TemplatePreviewProps = {
  * exactly this pane.
  *
  * Placeholders are filled from `lib/template_preview.ts` with samples longer
- * than the English words they replace — a real name is where a subject line
+ * than the English words they replace - a real name is where a subject line
  * actually overflows, and `{name}` would never show that.
  */
 export function TemplatePreview({
@@ -134,7 +134,7 @@ function EmailPreview({ values }: PreviewProps) {
 }
 
 /**
- * A phone message thread, plus what the message costs to send — the cost is
+ * A phone message thread, plus what the message costs to send - the cost is
  * the entire reason this channel has its own screen.
  *
  * Inside the phone is the message exactly as it arrives: one bubble, however
@@ -183,7 +183,7 @@ function SmsPreview({
       </dl>
       <p className="text-muted-foreground text-xs">
         A segment holds {info.encoding === "GSM-7" ? "160" : "70"} characters in{" "}
-        {info.encoding}, and {capacity} once the message splits — each part
+        {info.encoding}, and {capacity} once the message splits - each part
         carries a concatenation header.
       </p>
     </>

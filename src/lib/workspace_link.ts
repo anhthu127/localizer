@@ -2,7 +2,7 @@ import { defaultNavPath } from "@/config/nav_items"
 
 /**
  * Builds a workspace URL with its filters in the query string, so a link from
- * the dashboard opens the list already scoped — `/web/school?lang=vi&group=nav`.
+ * the dashboard opens the list already scoped - `/web/school?lang=vi&group=nav`.
  *
  * `q` is the row search, which is how the add-key screen links straight at one
  * key in a given language.

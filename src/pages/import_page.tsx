@@ -48,7 +48,7 @@ type StagedFile = {
   id: string;
   name: string;
   values: LocaleBundle;
-  /** Null until somebody says which language it is — never guessed silently. */
+  /** Null until somebody says which language it is - never guessed silently. */
   language: LanguageCode | null;
 };
 
@@ -64,7 +64,7 @@ type ImportResult = {
 /** A finished delivery: every file's write, and the retire that followed. */
 type ImportOutcome = {
   files: ImportResult[];
-  /** Keys no file carried, dropped from the registry — 0 unless replacing. */
+  /** Keys no file carried, dropped from the registry - 0 unless replacing. */
   retired: number;
   /** Why the retire did not happen, when it was meant to. */
   retireError: string | null;
@@ -75,7 +75,7 @@ const targetOptions = navLeaves.map(({ section, leaf }) => ({
   label: `${section.title} · ${leaf.title}`,
 }));
 /**
- * Route: `/import` — the import wizard, `?target=web/school` optional.
+ * Route: `/import` - the import wizard, `?target=web/school` optional.
  *
  * Its own screen rather than a dialog on the workspace, because a delivery is
  * a dozen files at once and each one needs a language, a diff and a decision.
@@ -83,14 +83,14 @@ const targetOptions = navLeaves.map(({ section, leaf }) => ({
  * into: the sidebar carries it, and the workspace's Import button is a link to
  * here with the app already chosen.
  *
- * The app cannot be read off the files. Key uniqueness is per target — School
- * and Parent both define `home.title`, differently — so an `en.json` on its own
+ * The app cannot be read off the files. Key uniqueness is per target - School
+ * and Parent both define `home.title`, differently - so an `en.json` on its own
  * does not say where it belongs, and asking is the only honest thing to do.
  *
  * Four steps, all on one page rather than behind a stepper: the reviewer
  * reading the diff in step three is the same person who has to remember which
  * app they picked in step one, and hiding it from them is how the wrong bundle
- * gets accepted. Nothing is written until Confirm — see `docs/redesign_brief.md`,
+ * gets accepted. Nothing is written until Confirm - see `docs/redesign_brief.md`,
  * §3.7.
  */
 export function ImportPage() {
@@ -120,8 +120,8 @@ export function ImportPage() {
     const next = new URLSearchParams(params);
     next.set("target", value);
     setParams(next, { replace: true });
-    // The files stay — the same delivery aimed at a different app is a real
-    // correction — but everything read about the old app is now wrong.
+    // The files stay - the same delivery aimed at a different app is a real
+    // correction - but everything read about the old app is now wrong.
     setResults(null);
   };
 
@@ -143,7 +143,7 @@ export function ImportPage() {
 
     for (const file of files) {
       // `undefined` is "not read yet"; `[]` is an app with no keys, which a
-      // file can now fill on its own — every key in it reads as new.
+      // file can now fill on its own - every key in it reads as new.
       const rows = file.language ? bundles.rows.get(file.language) : undefined;
       if (!file.language || !rows) {
         continue;
@@ -238,7 +238,7 @@ export function ImportPage() {
         });
       } catch (cause: unknown) {
         failed.push(
-          `${file.name} — ${
+          `${file.name} - ${
             cause instanceof BundleFileError ? cause.message : messageOf(cause)
           }`,
         );
@@ -342,7 +342,7 @@ export function ImportPage() {
 
     if (failed > 0) {
       toast.error(
-        `${failed} of ${done.length} could not be written — see the results below`,
+        `${failed} of ${done.length} could not be written - see the results below`,
       );
     } else if (retireError) {
       toast.error("Imported, but the keys left out could not be retired", {
@@ -384,7 +384,7 @@ export function ImportPage() {
         <Step
           index={1}
           title="Which app"
-          hint="A file does not say where it belongs — the same key exists in more than one app, holding different text."
+          hint="A file does not say where it belongs - the same key exists in more than one app, holding different text."
         >
           <Select value={target} onValueChange={setTarget}>
             <SelectTrigger className="w-72">
@@ -440,7 +440,7 @@ export function ImportPage() {
             </p>
             {files.length === 0 && (
               <p className="text-muted-foreground text-xs">
-                Flat or nested —{" "}
+                Flat or nested -{" "}
                 <span className="font-mono">{`{ "nav.home": "…" }`}</span> and{" "}
                 <span className="font-mono">{`{ "nav": { "home": "…" } }`}</span>{" "}
                 both read the same.
@@ -510,7 +510,7 @@ export function ImportPage() {
               Clear the keys these files leave out
               <span className="text-muted-foreground">
                 {" "}
-                — a true replace, applied to every file below. A key one file
+                - a true replace, applied to every file below. A key one file
                 omits loses its value in that language; a key <em>no</em> file
                 carries is retired from the app altogether, in all{" "}
                 {languages.length} languages. Leave it off when the delivery is
@@ -528,7 +528,7 @@ export function ImportPage() {
               <span>
                 {retired.length} {retired.length === 1 ? "key is" : "keys are"}{" "}
                 in none of these files and will be deleted from {targetLabel}{" "}
-                entirely — the {retired.length === 1 ? "key" : "keys"} and{" "}
+                entirely - the {retired.length === 1 ? "key" : "keys"} and{" "}
                 {retired.length === 1 ? "its" : "their"} text in every language,
                 not only the {codes.length === 1 ? "one" : codes.length} you are
                 importing.{" "}
@@ -732,7 +732,7 @@ function DiffForFile({
           to this app and will be registered, with every other language given
           the same {diff.counts.new === 1 ? "key" : "keys"} and no text yet
           {file.language !== SOURCE_LANGUAGE &&
-            " — English included, so they read as missing there until somebody writes them"}
+            " - English included, so they read as missing there until somebody writes them"}
           .
         </p>
       )}
@@ -741,12 +741,12 @@ function DiffForFile({
         <p className="text-muted-foreground text-xs">
           {diff.invalid.length}{" "}
           {diff.invalid.length === 1 ? "key is" : "keys are"} named in a way
-          this app cannot store and will be skipped —{" "}
+          this app cannot store and will be skipped -{" "}
           <span className="font-mono">
             {diff.invalid.slice(0, 3).join(", ")}
           </span>
           {diff.invalid.length > 3 && ` and ${diff.invalid.length - 3} more`}. A
-          key is dot-separated segments — group.section.name.
+          key is dot-separated segments - group.section.name.
         </p>
       )}
     </div>
@@ -815,7 +815,7 @@ function Results({
 
 /**
  * A file named after a language is usually meant for it, and picking the wrong
- * one is the mistake this screen exists to prevent — so a name that does not
+ * one is the mistake this screen exists to prevent - so a name that does not
  * name a language is left unassigned rather than guessed at.
  *
  * `.` and `_` split, `-` does not: `zh-Hans` is a code, `vi_VN` is a code and a
@@ -853,7 +853,7 @@ function whyNot(state: {
     return `${state.unassigned} ${state.unassigned === 1 ? "file has" : "files have"} no language yet.`;
   }
   if (state.duplicated > 0) {
-    return "Two files claim the same language — one would overwrite the other.";
+    return "Two files claim the same language - one would overwrite the other.";
   }
   if (state.error) {
     return "The app's current values could not be read.";

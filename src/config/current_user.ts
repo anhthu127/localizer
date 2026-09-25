@@ -6,7 +6,7 @@
  * backend stamps it onto the audit trail the workspace shows.
  *
  * A real service takes the author from the session and ignores what the
- * browser claims — an audit trail the client can forge is not one. When that
+ * browser claims - an audit trail the client can forge is not one. When that
  * lands, this file goes away and `lib/api.ts` stops sending the field; nothing
  * else has to change.
  */

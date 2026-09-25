@@ -5,7 +5,7 @@ import type { Transition, Variants } from "motion/react"
  * variant from here rather than inventing its own numbers, so the whole UI
  * accelerates and settles the same way.
  *
- * Reduced motion is not handled per animation — `MotionProvider` sets
+ * Reduced motion is not handled per animation - `MotionProvider` sets
  * `reducedMotion="user"` once, and Motion then drops transforms for anyone who
  * asked their OS for less movement, keeping opacity only.
  */
@@ -14,7 +14,7 @@ import type { Transition, Variants } from "motion/react"
 export const easeOut: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 export const transitions = {
-  /** Hover, press, icon swaps — has to feel instant. */
+  /** Hover, press, icon swaps - has to feel instant. */
   fast: { duration: 0.15, ease: easeOut },
   /** The default: entrances, fades, list items. */
   base: { duration: 0.28, ease: easeOut },
@@ -27,13 +27,13 @@ export const transitions = {
 /** How far a element travels on entry, in px. Small on purpose. */
 const RISE = 8
 
-/** Fade up — the entrance for a single block of content. */
+/** Fade up - the entrance for a single block of content. */
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: RISE },
   visible: { opacity: 1, y: 0, transition: transitions.base },
 }
 
-/** Fade only — for content that must not shift, like a table row. */
+/** Fade only - for content that must not shift, like a table row. */
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: transitions.base },
@@ -59,7 +59,7 @@ export const pageEnter: Variants = {
   visible: { opacity: 1, y: 0, transition: transitions.slow },
 }
 
-/** A bar that slides in from the bottom edge — the unsaved-changes tray. */
+/** A bar that slides in from the bottom edge - the unsaved-changes tray. */
 export const slideUpBar: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: transitions.spring },

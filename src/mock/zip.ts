@@ -1,5 +1,5 @@
 /**
- * A minimal ZIP writer — enough to hand the browser an archive of locale files.
+ * A minimal ZIP writer - enough to hand the browser an archive of locale files.
  *
  * Neither Node nor the browser ships an archive format, and pulling a
  * dependency into a mock backend for ~80 lines of header layout is a poor
@@ -9,7 +9,7 @@
  *
  * Nothing here is Node-specific. `CompressionStream` and `Uint8Array` are the
  * same in both runtimes, which is what lets the export work whether the mock
- * runs on the dev server or in the tab — see `browser_backend.ts`.
+ * runs on the dev server or in the tab - see `browser_backend.ts`.
  *
  * No zip64, no encryption, no directory entries. A locale export is a handful
  * of files of a few hundred KB, which is comfortably inside the 32-bit fields.
@@ -17,7 +17,7 @@
 
 /**
  * Bytes backed by a plain `ArrayBuffer`. A bare `Uint8Array` allows a
- * `SharedArrayBuffer` behind it, which neither `Blob` nor `Response` accepts —
+ * `SharedArrayBuffer` behind it, which neither `Blob` nor `Response` accepts -
  * saying so once here keeps the casts out of everything below.
  */
 export type Bytes = Uint8Array<ArrayBuffer>
@@ -31,7 +31,7 @@ export type ZipEntry = {
 const LOCAL_HEADER = 0x04034b50
 const CENTRAL_HEADER = 0x02014b50
 const END_OF_CENTRAL = 0x06054b50
-/** 2.0 — the version that introduced deflate. */
+/** 2.0 - the version that introduced deflate. */
 const VERSION = 20
 /** Bit 11: names and comments are UTF-8. */
 const UTF8_FLAG = 0x0800

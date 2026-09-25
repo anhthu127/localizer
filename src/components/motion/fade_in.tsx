@@ -6,7 +6,7 @@ import { fadeInUp } from "@/lib/motion"
 type FadeInProps = {
   children: ReactNode
   className?: string
-  /** Seconds to wait before starting — for hand-ordering a few blocks. */
+  /** Seconds to wait before starting - for hand-ordering a few blocks. */
   delay?: number
 } & Omit<ComponentProps<typeof motion.div>, "variants" | "initial" | "animate">
 

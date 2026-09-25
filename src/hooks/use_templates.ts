@@ -18,7 +18,7 @@ type State = {
   templates: TemplateEntry[]
   isLoading: boolean
   error: string | null
-  /** Refetches the same channel and language — call it after a save. */
+  /** Refetches the same channel and language - call it after a save. */
   reload: () => void
 }
 
@@ -28,7 +28,7 @@ type State = {
  * The same shape as `use_translation_rows`, and for the same reasons: the
  * response carries status computed by the server, a channel nobody has seeded
  * answers with an empty list rather than an error, and a reload keeps the old
- * rows on screen until the new ones land — the table is behind an open dialog
+ * rows on screen until the new ones land - the table is behind an open dialog
  * when a save triggers one.
  */
 export function useTemplates(target: string, language: LanguageCode): State {

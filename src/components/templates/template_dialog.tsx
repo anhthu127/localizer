@@ -37,7 +37,7 @@ type TemplateDialogProps = {
   profile: TargetProfile
   language: LanguageCode
   onClose: () => void
-  /** Refetch the table — the progress column changed. */
+  /** Refetch the table - the progress column changed. */
   onSaved: () => void
 }
 
@@ -48,14 +48,14 @@ type PreviewMode = "target" | "source"
  * gets it on the right.
  *
  * Two panels rather than one screen because the two halves answer different
- * questions and both are needed at once — "does this sentence say the right
+ * questions and both are needed at once - "does this sentence say the right
  * thing" is the left panel, "does this message still work" is the right one.
  * A subject line that overflows, a button label that wraps, a body whose
  * markup a translator broke and a notification cut off mid-word are all
  * invisible in a textarea and obvious in the preview.
  *
  * The dialog is mounted per template (keyed by id in the page), so its edits
- * are local state and closing it discards them — the same bulk-save shape as
+ * are local state and closing it discards them - the same bulk-save shape as
  * the strings workspace, scoped to one message.
  */
 export function TemplateDialog({
@@ -76,7 +76,7 @@ export function TemplateDialog({
     languages.find((item) => item.code === language)?.name ?? language
   const isRtl = languages.find((item) => item.code === language)?.rtl ?? false
   // Templates come from the API and every language is anchored to their
-  // English, so English is viewed, never edited — and the preview toggle
+  // English, so English is viewed, never edited - and the preview toggle
   // would offer the same text under two labels, so it keeps one.
   const isSource = language === SOURCE_LANGUAGE
   const previewMode: PreviewMode = isSource ? "target" : mode

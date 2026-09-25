@@ -3,7 +3,7 @@
  * store of small text documents, addressed by path.
  *
  * `store.ts` used to call `node:fs` directly, which pinned the mock to the Vite
- * dev server. Behind this interface the same store runs in two places — files
+ * dev server. Behind this interface the same store runs in two places - files
  * under `server-data/` while you develop (see `server/node_file_store.ts`) and
  * IndexedDB when the built app is served as static files with no backend at
  * all (see `browser_backend.ts`). The paths are identical in both, so what the
@@ -23,7 +23,7 @@ export type FileStore = {
   /** The document's text, or null if it was never written. */
   read(path: string): string | null
   write(path: string, text: string): void
-  /** Throws every document away — the first half of a re-seed. */
+  /** Throws every document away - the first half of a re-seed. */
   clear(): void
 }
 

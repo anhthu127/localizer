@@ -12,7 +12,7 @@
  * 2. **HTML.** An email body is markup, and the point of the pane is to render
  *    it. Rendering translator-supplied markup as-is would put whatever a
  *    bundle contains into this document, so the body is escaped first and only
- *    an explicit whitelist of tags is reintroduced — see `safeHtml`.
+ *    an explicit whitelist of tags is reintroduced - see `safeHtml`.
  */
 
 const SAMPLES: Record<string, string> = {
@@ -23,8 +23,8 @@ const SAMPLES: Record<string, string> = {
   "{studentName}": "Lê Minh Khang",
   "{parentName}": "Phạm Thu Hà",
   "{schoolName}": "Riverside International School",
-  "{campusName}": "Riverside — Thảo Điền Campus",
-  "{className}": "Unit 14 — Morning B",
+  "{campusName}": "Riverside - Thảo Điền Campus",
+  "{className}": "Unit 14 - Morning B",
   "{unitName}": "Unit 14 · The Lost Kite",
   "{code}": "8F2K-40QD",
   "{link}": "https://app.grapeseed.example/invite/8F2K40QD",
@@ -38,12 +38,12 @@ const SAMPLES: Record<string, string> = {
   "{senderName}": "GrapeSeed Support",
 }
 
-/** Every placeholder the samples cover — the dialog lists them. */
+/** Every placeholder the samples cover - the dialog lists them. */
 export const sampleValues = SAMPLES
 
 /**
  * Substitutes the samples above. A placeholder with no sample is left standing
- * so the preview shows it unresolved rather than silently blank — an unknown
+ * so the preview shows it unresolved rather than silently blank - an unknown
  * `{foo}` is a question for whoever wrote the English, not something to hide.
  */
 export function fillSamples(value: string): string {
@@ -72,12 +72,12 @@ const ALLOWED = new Set([
   "small",
 ])
 
-/** Tags that never close — a body-balance check must not expect `</br>`. */
+/** Tags that never close - a body-balance check must not expect `</br>`. */
 export const VOID_TAGS = new Set(["br", "hr", "img"])
 
 /**
- * A lone `&` is escaped; one that already begins an entity — `&amp;`,
- * `&nbsp;`, `&#8212;` — is left alone, so a body written the way email bodies
+ * A lone `&` is escaped; one that already begins an entity - `&amp;`,
+ * `&nbsp;`, `&#8212;` - is left alone, so a body written the way email bodies
  * are written previews as the characters the mail shows rather than as its own
  * source. Leaving entities intact costs nothing: a browser renders
  * `&lt;script&gt;` as text either way.
@@ -93,14 +93,14 @@ const escapeText = (value: string) =>
  * `href` is the only attribute kept, and only when it goes somewhere sane.
  *
  * A `javascript:` or `data:` URL is dropped and the link previews as unlinked
- * text, which is the honest rendering — it is what a mail client does with it
+ * text, which is the honest rendering - it is what a mail client does with it
  * too.
  */
 function safeHref(attrs: string): string {
   const match = /href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attrs)
   const url = (match?.[2] ?? match?.[3] ?? match?.[4] ?? "").trim()
 
-  // A placeholder is the usual case — most links in these mails are `{link}` —
+  // A placeholder is the usual case - most links in these mails are `{link}` -
   // so it has to survive the editor's round trip as well as the preview's.
   if (!url || !/^(https?:|mailto:|tel:|\{[^{}]+\})/i.test(url)) {
     return ""
@@ -118,11 +118,11 @@ const EXTERNAL = ' target="_blank" rel="noreferrer"'
 const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/g
 
 /**
- * The body, rendered — safe to hand to `dangerouslySetInnerHTML`.
+ * The body, rendered - safe to hand to `dangerouslySetInnerHTML`.
  *
  * One pass over the value. Everything between tags is escaped, so no text a
  * bundle contains can become markup. Every tag is looked up in the whitelist
- * and then *rebuilt* — the original is never passed through — so the only
+ * and then *rebuilt* - the original is never passed through - so the only
  * attribute that survives is an `href` this file checked. A tag that is not on
  * the list, `<script>` included, is escaped and previews as its own text,
  * which is also the most useful thing to show a translator.
@@ -178,7 +178,7 @@ const UNWRAP = new Set(["span", "font"])
  * Different from `safeHtml` in one way that matters. There, an unknown tag is
  * *escaped*, because the value is a bundle string and showing a translator the
  * literal `<script>` they are about to ship is the useful thing. Here it is
- * *unwrapped* — tag dropped, text kept — because the markup was produced by
+ * *unwrapped* - tag dropped, text kept - because the markup was produced by
  * the browser, not typed by a person: a `<span style>` or a `<font>` is
  * styling the editor added, and text a translator typed arrives already
  * escaped by the DOM.

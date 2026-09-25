@@ -23,7 +23,7 @@ const kindIcon: Record<ContentKind, typeof Type> = {
 }
 
 /**
- * The empty state for an app with no keys yet — nine of the ten, until someone
+ * The empty state for an app with no keys yet - nine of the ten, until someone
  * adds one or imports a bundle.
  *
  * Borrowing School's 3,339 keys would look like a working feature and be a
@@ -51,7 +51,7 @@ export function TargetProfileCard({
             No keys in {title} yet
           </CardTitle>
           <CardDescription>
-            {profile.note} Add the first key below — it is created in this app
+            {profile.note} Add the first key below - it is created in this app
             only, and in every language at once.
           </CardDescription>
         </CardHeader>

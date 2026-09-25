@@ -22,7 +22,7 @@ type AnimatedProgressProps = {
  * The shadcn `Progress`, grown from zero on mount rather than painted full.
  *
  * It composes the Base UI root and the design system's track so the bar keeps
- * its `progressbar` role and its ARIA values — only the indicator is swapped
+ * its `progressbar` role and its ARIA values - only the indicator is swapped
  * for a motion element, because a width cannot be tweened from a stylesheet
  * without React state in between.
  */

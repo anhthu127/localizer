@@ -17,7 +17,7 @@ type State = {
   rows: TranslationRow[]
   isLoading: boolean
   error: string | null
-  /** Refetches the same target and language — call it after a write. */
+  /** Refetches the same target and language - call it after a write. */
   reload: () => void
 }
 

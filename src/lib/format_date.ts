@@ -26,7 +26,7 @@ export function formatDate(value: string) {
   return Number.isNaN(date.getTime()) ? value : dayFormat.format(date)
 }
 
-/** `11 Feb 2026, 10:20` — for a stamp where the time of day matters. */
+/** `11 Feb 2026, 10:20` - for a stamp where the time of day matters. */
 export function formatDateTime(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : dayTimeFormat.format(date)

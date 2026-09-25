@@ -1,5 +1,5 @@
 /**
- * Derivations over `GET /api/coverage`. The counting happens on the server —
+ * Derivations over `GET /api/coverage`. The counting happens on the server -
  * these are the three sums the dashboard shows on top of it.
  */
 
@@ -23,7 +23,7 @@ export function issueCountOf(entry: LanguageCoverage) {
   return entry.issues.placeholder + entry.issues.whitespace + entry.issues.script
 }
 
-/** Missing plus flagged, across every language — the real size of the queue. */
+/** Missing plus flagged, across every language - the real size of the queue. */
 export function totalNeedsReview(coverage: CoverageResponse) {
   return coverage.languages.reduce(
     (sum, entry) => sum + entry.missing + issueCountOf(entry),

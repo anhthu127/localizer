@@ -26,7 +26,7 @@ type LanguageCoverageCardProps = {
 
 /**
  * A key only counts as translated once it has a value of its own, so a bundle
- * exported with English as its fallback reads near zero here — which is the
+ * exported with English as its fallback reads near zero here - which is the
  * honest number. The flagged count beside the bar says how many of the values
  * that *did* translate a check is unhappy with.
  */

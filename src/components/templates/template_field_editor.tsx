@@ -43,8 +43,8 @@ type TemplateFieldEditorProps = {
  * One field of a template: the English above, the translation below, the
  * checks and the budget under that.
  *
- * This is the same contract as `TranslationRow` — the profile and the field
- * schema pick the control and the meter, nothing here is per-template — so the
+ * This is the same contract as `TranslationRow` - the profile and the field
+ * schema pick the control and the meter, nothing here is per-template - so the
  * "one row editor" rule from `docs/redesign_brief.md` §5 survives the addition
  * of a second screen. What differs is stacking: a template's six fields are one
  * message, so the English sits above the translation rather than beside it, and
@@ -132,7 +132,7 @@ export function TemplateFieldEditor({
             </Button>
           )}
           {/* Copy takes the English away, paste drops it in as a starting
-              point — one button doing the second under the first one's icon is
+              point - one button doing the second under the first one's icon is
               what made the copy button look broken. */}
           <Button
             variant="ghost"
@@ -165,7 +165,7 @@ export function TemplateFieldEditor({
       {field.format === "html" && !showSource ? (
         <div
           className="bg-muted/50 text-muted-foreground mt-2 rounded-md px-2.5 py-2 text-xs leading-relaxed [&_a]:underline [&_li]:mb-0.5 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
-          // Whitelisted and rebuilt by `safeHtml` — see `lib/template_preview.ts`.
+          // Whitelisted and rebuilt by `safeHtml` - see `lib/template_preview.ts`.
           dangerouslySetInnerHTML={{ __html: safeHtml(value.source) }}
         />
       ) : (
@@ -244,13 +244,13 @@ type MeterProps = {
 /**
  * Three meters, one per thing that silently truncates or bills:
  *
- * - **SMS** — `encoding · characters · segments`, against the English count.
+ * - **SMS** - `encoding · characters · segments`, against the English count.
  *   Nine of the twelve languages have no GSM-7 form, so their segment is 70
  *   characters rather than 160 and a one-segment English message becomes three.
- * - **A field with a soft budget** — a subject line or a push title is not
+ * - **A field with a soft budget** - a subject line or a push title is not
  *   rejected over the limit, it is quietly cut off in the inbox or on the lock
  *   screen. Amber, not an error.
- * - **A field with a hard limit** — the body the backend caps at 4,000
+ * - **A field with a hard limit** - the body the backend caps at 4,000
  *   characters. The over-limit case is an error from `checkTranslation`; this
  *   is the count that lets a translator see it coming.
  */
@@ -300,7 +300,7 @@ function Meter({ channel, field, value, current }: MeterProps) {
         {" "}
         (English: {value.source.length.toLocaleString()})
       </span>
-      {over && field.budget ? " — likely to be cut off" : ""}
+      {over && field.budget ? " - likely to be cut off" : ""}
     </p>
   )
 }

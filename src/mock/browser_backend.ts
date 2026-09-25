@@ -1,7 +1,7 @@
 /**
  * The mock backend, running in the tab.
  *
- * A static host — Vercel, Pages, an S3 bucket — serves `dist/` and nothing
+ * A static host - Vercel, Pages, an S3 bucket - serves `dist/` and nothing
  * else: there is no Node process, so `server/mock_api.ts` and its
  * `server-data/` folder are not there. The routes still are. This module gives
  * `router.ts` somewhere to keep its documents (IndexedDB) and somewhere to
@@ -11,7 +11,7 @@
  * So the deployed demo is the same backend as the dev one, minus the server.
  * The data is per visitor and per browser: yours to edit, reset and export,
  * invisible to anyone else, and gone if the browser's site data is cleared.
- * For a prototype that is the right trade — no database to run, no state a
+ * For a prototype that is the right trade - no database to run, no state a
  * stranger can break for everybody. A real deployment replaces all of this
  * with `VITE_API_URL`.
  */
@@ -120,7 +120,7 @@ function readAll(db: IDBDatabase): Promise<Map<string, string>> {
  * and the database is a copy of it kept up to date. That is sound here
  * because one tab owns the data: nothing else writes, so nothing can be read
  * back stale. A write that fails to persist still succeeds for this session,
- * which is the behaviour a demo wants — the alternative is an error dialog
+ * which is the behaviour a demo wants - the alternative is an error dialog
  * over a translation the visitor can see they just typed.
  */
 function browserFileStore(
@@ -176,7 +176,7 @@ async function start() {
 
 /**
  * The stand-in for `fetch` that `src/lib/api.ts` uses when the app was built
- * without a `VITE_API_URL`. Same path, same verbs, same `Response` — including
+ * without a `VITE_API_URL`. Same path, same verbs, same `Response` - including
  * the `content-disposition` the export dialog reads its filename from.
  */
 export async function localFetch(

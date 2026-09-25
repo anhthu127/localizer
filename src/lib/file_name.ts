@@ -25,14 +25,14 @@ export function safeFileName(name: string, fallback: string): string {
 /**
  * The name of one file inside the archive.
  *
- * The extension is left alone rather than forced to `.json` — an app that
+ * The extension is left alone rather than forced to `.json` - an app that
  * wants `en.arb` or `messages_en.js` is not doing anything wrong.
  */
 export function safeEntryName(name: string, fallback: string): string {
   return sanitize(name) || fallback
 }
 
-/** `{lang}` is the language code — `{lang}.json` → `vi.json`. */
+/** `{lang}` is the language code - `{lang}.json` → `vi.json`. */
 export const FILE_NAME_TOKEN = "{lang}"
 
 export function applyNamePattern(pattern: string, code: string): string {

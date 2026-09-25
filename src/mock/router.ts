@@ -6,7 +6,7 @@
  * imported JSON: every screen fetches, every edit is a request, and the data
  * lives in documents a human can open (see `store.ts`). Every route is scoped
  * to one app, because every app is its own key namespace. When the real
- * service is ready, delete `src/mock/` and point `VITE_API_URL` at it —
+ * service is ready, delete `src/mock/` and point `VITE_API_URL` at it -
  * `src/lib/api.ts` is the only other file that knows a server exists.
  *
  *   GET    /entries?target=&lang=    one app's keys, with status computed
@@ -21,7 +21,7 @@
  *   POST   /reset                    re-seed from sample-data
  *
  * Deleting is a POST with a body rather than a `DELETE /keys?key=`: real keys
- * contain slashes — `school_admin/campus_admin.inviteadmin.text` — and a bulk
+ * contain slashes - `school_admin/campus_admin.inviteadmin.text` - and a bulk
  * selection is thousands of them, so they belong in a body either way.
  *
  * Two callers reach this: `server/mock_api.ts` mounts it on the Vite dev
@@ -146,7 +146,7 @@ async function route(
       throw new HttpError(400, "Expected { values: { key: text } }")
     }
     // A file that reached here has been read and previewed in the browser, so
-    // a value that is not text is a caller bug rather than a bad upload — but
+    // a value that is not text is a caller bug rather than a bad upload - but
     // the store writes straight to disk, so it is checked here all the same.
     for (const [key, value] of Object.entries(input.values)) {
       if (typeof value !== "string") {
@@ -206,7 +206,7 @@ async function route(
 
 /**
  * The name the audit trail records. The mock has no session, so it believes
- * what the browser sent and names the gap when nothing was sent — a real
+ * what the browser sent and names the gap when nothing was sent - a real
  * service takes the author from the token instead and ignores this field.
  */
 function author(value: string | undefined): string {

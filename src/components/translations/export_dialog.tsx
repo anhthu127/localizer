@@ -29,7 +29,7 @@ import { languages, SOURCE_LANGUAGE, type LanguageCode } from "@/lib/locale_data
 const DEFAULT_PATTERN = `${FILE_NAME_TOKEN}.json`
 
 type ExportDialogProps = {
-  /** `web/school` — only this app's keys are in the archive. */
+  /** `web/school` - only this app's keys are in the archive. */
   target: string
   targetTitle: string
   /** Pre-ticked alongside English: the language being worked on. */
@@ -60,7 +60,7 @@ export function ExportDialog({
     () => new Set([SOURCE_LANGUAGE, language])
   )
   const [pattern, setPattern] = useState(DEFAULT_PATTERN)
-  /** Only the rows someone typed over — the rest follow the pattern. */
+  /** Only the rows someone typed over - the rest follow the pattern. */
   const [renamed, setRenamed] = useState<Partial<Record<LanguageCode, string>>>(
     {}
   )
@@ -294,7 +294,7 @@ export function ExportDialog({
               Include untranslated keys
               <span className="text-muted-foreground">
                 {" "}
-                — the ones this app calls missing: empty, or still English.
+                - the ones this app calls missing: empty, or still English.
                 Leave them out for a runtime bundle that falls back on its own.
               </span>
             </span>

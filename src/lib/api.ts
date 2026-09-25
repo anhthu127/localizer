@@ -35,7 +35,7 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? "/api"
  * A built app with no `VITE_API_URL` has nothing to fetch from: the dev
  * server's `/api` is a dev-server plugin, and a static host serves files.
  * Rather than ship a demo where every screen errors, the mock moves into the
- * browser — same routes, IndexedDB instead of `server-data/`.
+ * browser - same routes, IndexedDB instead of `server-data/`.
  */
 const IN_BROWSER = import.meta.env.PROD && !import.meta.env.VITE_API_URL
 
@@ -80,7 +80,7 @@ async function send(path: string, init?: RequestInit): Promise<Response> {
     // A dead server is the one error the mock makes likely, so name it.
     throw new ApiError(
       0,
-      `Cannot reach the API at ${BASE_URL} — ${messageOf(cause)}`
+      `Cannot reach the API at ${BASE_URL} - ${messageOf(cause)}`
     )
   }
 
@@ -120,7 +120,7 @@ export function fetchEntries(target: string, lang: LanguageCode) {
 }
 
 /**
- * One channel's templates, text included — see `TemplatesResponse`.
+ * One channel's templates, text included - see `TemplatesResponse`.
  *
  * There is no save counterpart: a template's fields are ordinary keys, so the
  * dialog writes through `saveTranslations` below.
@@ -132,7 +132,7 @@ export function fetchTemplates(target: string, lang: LanguageCode) {
 /**
  * The author travels with the write, here rather than from every screen that
  * saves: who is signed in is not something a dialog should have to remember.
- * A real service reads it off the session instead and ignores what is sent —
+ * A real service reads it off the session instead and ignores what is sent -
  * see `config/current_user.ts`.
  */
 export function createKey(input: CreateKeyRequest) {
@@ -146,7 +146,7 @@ export function createKey(input: CreateKeyRequest) {
 }
 
 /**
- * Removes keys from one app, one language or all of them — see `DeleteScope`.
+ * Removes keys from one app, one language or all of them - see `DeleteScope`.
  *
  * One call whether the screen is deleting a row or a selection of four
  * thousand: a single key is a selection of one, and the server rewrites each

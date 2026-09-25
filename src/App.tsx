@@ -19,7 +19,7 @@ function App() {
               {/* Not under a target: the wizard asks which app, because a
                   language file does not say which one it belongs to. */}
               <Route path="import" element={<ImportPage />} />
-              {/* `/web/school`, `/others/email`, … — one route per nav leaf.
+              {/* `/web/school`, `/others/email`, … - one route per nav leaf.
                   `TargetPage` picks the screen from the target's content kind. */}
               <Route path=":sectionId/:leafId" element={<TargetPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

@@ -28,7 +28,7 @@ type GroupFilterProps = {
   onChange: (group: string) => void
 }
 
-/** 156 group keys is too many for a plain select — searchable combobox instead. */
+/** 156 group keys is too many for a plain select - searchable combobox instead. */
 export function GroupFilter({
   value,
   options,

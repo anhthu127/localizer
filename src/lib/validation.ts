@@ -3,7 +3,7 @@
  *
  * `statusOf` catches a value that is absent, empty or a verbatim copy of the
  * English source. What it cannot catch is a bundle holding the wrong language
- * altogether — `ms.json` in the sample data holds Chinese — so for that, and
+ * altogether - `ms.json` in the sample data holds Chinese - so for that, and
  * for placeholders, markup and links, these checks are the only automatic
  * signal that a translated value is wrong.
  *
@@ -42,7 +42,7 @@ const sameMembers = (a: string[], b: string[]) =>
 /**
  * Expected dominant script per language, for the mislabelled-bundle check.
  *
- * `allows` lists other scripts that are legitimate in the language — Japanese
+ * `allows` lists other scripts that are legitimate in the language - Japanese
  * is written in kana *and* kanji, and kanji sit in the same Unicode block as
  * Chinese, so without it every Japanese string reads as Chinese.
  */
@@ -69,7 +69,7 @@ const scriptOf: Record<
   km: { label: "Khmer", pattern: /[ក-៿]/ },
 }
 
-/** Scripts a value can carry that are not the expected one — each a red flag. */
+/** Scripts a value can carry that are not the expected one - each a red flag. */
 const foreignScripts: { label: string; pattern: RegExp }[] = [
   { label: "Chinese", pattern: /[一-鿿]/ },
   { label: "Japanese kana", pattern: /[぀-ヿ]/ },
@@ -103,7 +103,7 @@ function scriptIssue(value: string, language: LanguageCode): RowIssue | null {
       return {
         id: "script",
         level: "warning",
-        message: `Contains ${script.label} characters — expected ${expected.label}`,
+        message: `Contains ${script.label} characters - expected ${expected.label}`,
       }
     }
   }
@@ -119,7 +119,7 @@ function scriptIssue(value: string, language: LanguageCode): RowIssue | null {
     return {
       id: "script",
       level: "warning",
-      message: `No ${expected.label} characters — this may still be English`,
+      message: `No ${expected.label} characters - this may still be English`,
     }
   }
 
@@ -127,7 +127,7 @@ function scriptIssue(value: string, language: LanguageCode): RowIssue | null {
 }
 
 /* --------------------------------------------------------------------------
- * HTML — email bodies only
+ * HTML - email bodies only
  * ------------------------------------------------------------------------ */
 
 const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g
@@ -156,7 +156,7 @@ function tagIssue(value: string): RowIssue | null {
           id: "html",
           level: "error",
           message: last
-            ? `</${tag}> closes <${last}> — tags are crossed`
+            ? `</${tag}> closes <${last}> - tags are crossed`
             : `</${tag}> has no opening tag`,
         }
       }
@@ -184,7 +184,7 @@ const hrefsOf = (value: string) =>
 /**
  * A link a translator retyped, dropped or localised by hand is a dead link in
  * a mail that has already been sent. The English URLs are the ones that work,
- * so the target's set has to match them exactly — placeholders included, since
+ * so the target's set has to match them exactly - placeholders included, since
  * most of them are `{link}`.
  */
 function linkIssue(source: string, target: string): RowIssue | null {
@@ -217,7 +217,7 @@ type CheckOptions = {
   /** Hard ceiling the backend enforces, where one is known. */
   maxLength?: number
   /**
-   * `html` adds the tag-balance and link checks — an email body is markup, and
+   * `html` adds the tag-balance and link checks - an email body is markup, and
    * a lost `</p>` or a rewritten `href` breaks the mail rather than the
    * sentence. Everything else is `text`, the default.
    */
@@ -228,8 +228,8 @@ type CheckOptions = {
  * Shortest English source worth reviewing.
  *
  * Below this, a row is a label, a button or a single word: the checks fire
- * often and say little — a two-word string in Thai carries no Latin letters,
- * and a short one legitimately runs several times the English length — so the
+ * often and say little - a two-word string in Thai carries no Latin letters,
+ * and a short one legitimately runs several times the English length - so the
  * review queue fills with rows a translator cannot act on. Review starts once
  * the English is long enough for the checks to mean something.
  */
@@ -314,7 +314,7 @@ export function checkTranslation(
     issues.push({
       id: "length",
       level: "warning",
-      message: `${ratio}× the English length — may not fit the layout`,
+      message: `${ratio}× the English length - may not fit the layout`,
     })
   }
 
@@ -386,7 +386,7 @@ function unitsOf(value: string, encoding: SmsInfo["encoding"]): number {
  * Splitting is by billed unit rather than by character: an escape pair or a
  * surrogate pair is never torn across a boundary, so a part can close one unit
  * short rather than split a character in half. Counting the parts is therefore
- * the only honest way to reach a segment count — dividing the units by the
+ * the only honest way to reach a segment count - dividing the units by the
  * capacity misses the unit a straddling character leaves behind.
  *
  * A message that fits in a single segment comes back as one part.
@@ -429,7 +429,7 @@ function smsSegments(value: string): string[] {
  * once a message splits, because each part carries a concatenation header.
  *
  * Nine of the twelve target languages have no GSM-7 representation at all, so
- * for them every message is UCS-2 and the budget is 70 — which is why this
+ * for them every message is UCS-2 and the budget is 70 - which is why this
  * meter sits on the row rather than in a validation report nobody opens.
  */
 export function smsInfo(value: string): SmsInfo {
