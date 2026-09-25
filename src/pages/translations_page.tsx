@@ -473,7 +473,7 @@ export function TranslationsPage() {
           <div
             className={cn(
               ROW_GRID,
-              "text-muted-foreground bg-muted items-center gap-3 border-b px-4 py-1.5 text-[11px] tracking-wide uppercase"
+              "text-foreground bg-muted h-10 items-center gap-3 border-b px-4 text-sm font-medium"
             )}
           >
             <span className="flex items-center gap-2">

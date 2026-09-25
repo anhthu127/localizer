@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -168,10 +167,6 @@ export function ExportDialog({
         <form onSubmit={handleSubmit} className="contents">
           <DialogHeader>
             <DialogTitle>Export {targetTitle}</DialogTitle>
-            <DialogDescription>
-              One file per language, zipped. Every key in this app, not only
-              what the filters show.
-            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-1.5">
@@ -183,11 +178,6 @@ export function ExportDialog({
               placeholder={DEFAULT_PATTERN}
               className="font-mono"
             />
-            <p className="text-muted-foreground text-xs">
-              <span className="font-mono">{FILE_NAME_TOKEN}</span> becomes the
-              language code. Rename a row below to give one language a name of
-              its own.
-            </p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -290,14 +280,7 @@ export function ExportDialog({
                 setIncludeUntranslated(checked === true)
               }
             />
-            <span>
-              Include untranslated keys
-              <span className="text-muted-foreground">
-                {" "}
-                - the ones this app calls missing: empty, or still English.
-                Leave them out for a runtime bundle that falls back on its own.
-              </span>
-            </span>
+            <span>Include untranslated keys</span>
           </Label>
 
           <DialogFooter>

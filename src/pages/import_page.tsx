@@ -37,7 +37,6 @@ import {
 import {
   languageNames,
   languages,
-  SOURCE_LANGUAGE,
   type LanguageCode,
   type LocaleBundle,
 } from "@/lib/locale_data";
@@ -381,11 +380,7 @@ export function ImportPage() {
       </div>
 
       <div className="flex max-w-4xl flex-col gap-6 p-4">
-        <Step
-          index={1}
-          title="Which app"
-          hint="A file does not say where it belongs - the same key exists in more than one app, holding different text."
-        >
+        <Step index={1} title="Which app">
           <Select value={target} onValueChange={setTarget}>
             <SelectTrigger className="w-72">
               <SelectValue placeholder="Choose an app…" />
@@ -403,7 +398,6 @@ export function ImportPage() {
         <Step
           index={2}
           title="The files"
-          hint="One file per language. Drop as many as the delivery holds."
           disabled={target === ""}
         >
           <input
@@ -479,7 +473,6 @@ export function ImportPage() {
         <Step
           index={3}
           title="What it would change"
-          hint="Read the diff before accepting it. Nothing is written until you confirm."
           disabled={files.length === 0}
         >
           {bundles.error && (
@@ -506,17 +499,7 @@ export function ImportPage() {
                 setMode(checked === true ? "replace" : "merge")
               }
             />
-            <span>
-              Clear the keys these files leave out
-              <span className="text-muted-foreground">
-                {" "}
-                - a true replace, applied to every file below. A key one file
-                omits loses its value in that language; a key <em>no</em> file
-                carries is retired from the app altogether, in all{" "}
-                {languages.length} languages. Leave it off when the delivery is
-                partial and the keys it omits should keep what they have.
-              </span>
-            </span>
+            <span>Clear the keys these files leave out</span>
           </Label>
 
           {/* The one thing on this screen that reaches languages the reviewer
@@ -544,7 +527,6 @@ export function ImportPage() {
         <Step
           index={4}
           title="Confirm"
-          hint="Each file replaces one language of one app."
           disabled={files.length === 0}
         >
           {results ? (
@@ -575,13 +557,11 @@ export function ImportPage() {
 function Step({
   index,
   title,
-  hint,
   disabled = false,
   children,
 }: {
   index: number;
   title: string;
-  hint: string;
   disabled?: boolean;
   children: ReactNode;
 }) {
@@ -598,7 +578,6 @@ function Step({
           {index}
         </span>
         <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="text-muted-foreground min-w-0 text-xs">{hint}</p>
       </div>
       {children}
     </section>
@@ -725,17 +704,6 @@ function DiffForFile({
         languageName={language?.name ?? file.language}
         isRtl={language?.rtl ?? false}
       />
-
-      {diff.counts.new > 0 && (
-        <p className="text-muted-foreground text-xs">
-          {diff.counts.new} {diff.counts.new === 1 ? "key is" : "keys are"} new
-          to this app and will be registered, with every other language given
-          the same {diff.counts.new === 1 ? "key" : "keys"} and no text yet
-          {file.language !== SOURCE_LANGUAGE &&
-            " - English included, so they read as missing there until somebody writes them"}
-          .
-        </p>
-      )}
 
       {diff.invalid.length > 0 && (
         <p className="text-muted-foreground text-xs">

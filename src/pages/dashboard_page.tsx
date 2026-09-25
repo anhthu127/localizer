@@ -19,14 +19,8 @@ export function DashboardPage() {
   return (
     <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-        <FadeIn className="flex flex-wrap items-end gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Localization overview</h1>
-            <p className="text-muted-foreground text-sm">
-              Pick a target to start translating, or jump straight to the
-              language that needs the most work.
-            </p>
-          </div>
+        <FadeIn className="flex flex-wrap items-center gap-4">
+          <h1 className="text-2xl font-semibold">Localization overview</h1>
           <Button className="ml-auto" render={<Link to={defaultNavPath} />}>
             Open workspace
             <ArrowRight data-icon="inline-end" />
