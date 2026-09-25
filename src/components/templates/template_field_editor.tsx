@@ -151,8 +151,6 @@ export function TemplateFieldEditor({
         </div>
       </div>
 
-      <p className="text-muted-foreground mt-0.5 text-xs">{field.hint}</p>
-
       {/* The English, in the same shape the editor below is in: rendered while
           the editor is rich, as markup while it shows HTML. Reading a body as
           tag soup when you are not editing tags is just noise. */}

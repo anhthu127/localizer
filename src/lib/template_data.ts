@@ -67,8 +67,6 @@ export type TemplateField = {
   control: "line" | "paragraph" | "rich"
   /** `html` fields get the tag-balance and link checks; `text` fields do not. */
   format: "text" | "html"
-  /** One line telling the translator what this field is for. */
-  hint: string
   /** Hard ceiling the backend enforces — over it is an error. */
   maxLength?: number
   /**
@@ -95,7 +93,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Subject",
       control: "line",
       format: "text",
-      hint: "The mail's title, and the only line most people read. Front-load the point — most clients cut it around 60 characters.",
       budget: 60,
     },
     {
@@ -103,7 +100,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Body",
       control: "rich",
       format: "html",
-      hint: "Starts with the mail's heading — the toolbar's Heading button makes one. Keep every link and every {placeholder} the English has.",
       maxLength: 4000,
     },
     {
@@ -111,7 +107,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Button label",
       control: "line",
       format: "text",
-      hint: "Two to four words. It has to fit a button at phone width.",
       budget: 28,
     },
     {
@@ -119,7 +114,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Footer",
       control: "paragraph",
       format: "text",
-      hint: "The line under the button — why they got this mail, and how to stop.",
     },
   ],
   sms: [
@@ -128,7 +122,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Message",
       control: "paragraph",
       format: "text",
-      hint: "One segment if you can. Nine of the twelve languages bill at 70 characters, not 160.",
     },
   ],
   notification: [
@@ -137,7 +130,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Title",
       control: "line",
       format: "text",
-      hint: "The bold first line. Truncated past roughly 65 characters on a lock screen.",
       budget: 65,
     },
     {
@@ -145,7 +137,6 @@ export const channelFields: Record<TemplateChannel, TemplateField[]> = {
       label: "Body",
       control: "paragraph",
       format: "text",
-      hint: "One sentence. Two lines is all a collapsed notification shows.",
       budget: 240,
     },
   ],

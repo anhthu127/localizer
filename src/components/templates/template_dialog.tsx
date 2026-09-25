@@ -148,7 +148,7 @@ export function TemplateDialog({
             {leaf?.leaf.title ?? template.owner.app}
             <span className="uppercase">{template.owner.kind}</span>
           </span>
-          <DialogDescription className="text-xs">
+          <DialogDescription className="sr-only">
             <span className="font-mono">{ownerPath(template.owner)}</span> ·
             created by {template.createdBy} · translating into {languageName}
           </DialogDescription>
@@ -177,10 +177,6 @@ export function TemplateDialog({
                 <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                   Placeholders in this template
                 </h4>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Keep every one of these, spelled exactly as it is. The preview
-                  fills them with sample values.
-                </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {placeholders.map((placeholder) => (
                     <Badge
